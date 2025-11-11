@@ -20,9 +20,9 @@ Arg = Data.define :value do
   def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
 end
 
-Opt = Data.define :spec, :name, :value do
-  def initialize(spec:, name:, value: nil) = super(spec:, name:, value:)
-  def label = spec.names.find{ it.size > 1 } || spec.names.first
+Opt = Data.define :optdef, :name, :value do
+  def initialize(optdef:, name:, value: nil) = super(optdef:, name:, value:)
+  def label = optdef.names.find{ it.size > 1 } || optdef.names.first
   def deconstruct_keys(...) = to_h.merge(label: label)
   def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
 end
