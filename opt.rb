@@ -21,7 +21,7 @@ Optdef = Data.define(:names, :arg) do
 end
 
 class Optspec < Array # a list of Optdefs
-  def self.from_doc(doc) = self[*doc_parse(doc).map{ Optdef[*it] }]
+  def self.from_help(doc) = self[*doc_parse(doc).map{ Optdef[*it] }]
   def [](k, ...) = String === k ? self.find{ it.names.include? k } : super(k, ...)
   def to_s = join("\n")
 end

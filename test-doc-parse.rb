@@ -5,7 +5,7 @@ require_relative "opt"
 puts "call me with --help or try --bar / --no-bar" if ARGV.empty?
 
 help = DATA.read
-optspec = Optspec.from_doc help
+optspec = Optspec.from_help help
 # puts optspec.to_s
 opts = parse!(ARGV, optspec)
 # y opts
