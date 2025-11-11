@@ -37,6 +37,8 @@ class Unreachable < RuntimeError; end
 
 
 def parse(argv, optspec)
+  Array === argv && argv.all?{ String === it } or raise "argv must be an array of strings (given #{argv.class})"
+  Optspec === optspec or raise "optspec must be an Optspec (given #{optspec.class})"
   tokens = argv.dup
   args = []
   ctx = :top
