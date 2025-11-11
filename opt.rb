@@ -97,35 +97,29 @@ end
 
 require "strscan"
 
-def doc_parse(help)
-  rx_short  = /-[^-\s]( (\[\S+?\]|[^\s,]+))?/
-  rx_long   = /--(?=[^-\s])(\[no-?\])?[^\s=]+(\[=\S+?\]|[ =][^\s,]+)?/
-  opts = []
-  lines = help.lines
-  while line = lines.shift
-    ss = StringScanner.new(line)
-    ss.scan(/ +/) or next
-    flags = []
-    opt = {flags:, docs:[]}
-    while flag = ss.scan(rx_short) || ss.scan(rx_long)
-      opt[:flags] << flag
-      break unless ss.scan(/ *, */)
-    end
-    doc = nil
-    if ss.scan(/ +/)
-      nsp = ss.pos
-      doc = ss.scan(/\S.*/)
-    end
-    ss.scan(/\n/)
-    raise "no can parse: " + ss.rest.inspect if !ss.eos?
-    if doc
-      opt[:docs] << doc
-      rx_doc_cont = / {#{nsp}}( *\S.*)/
-      opt[:docs] << lines.shift[rx_doc_cont, 1] while lines.first&.=~(rx_doc_cont)
-    end
-    opts << opt
-  end
-  opts
+RX_SOARG = /\[\S+?\]/
+RX_SARG  = /[^\s,]+/
+RX_LOARG = /\[=\S+?\]| #{RX_SOARG}/
+RX_LARG  = /[ =]#{RX_SARG}/
+RX_NO    = /\[no-?\]/
+RX_SOPT  = /-[^-\s,](?: (?:#{RX_SOARG}|#{RX_SARG}))?/
+RX_LOPT  = /--(?=[^-=,\s])#{RX_NO}?[^\s=,\[]+(?:#{RX_LOARG}|#{RX_LARG})?/
+RX_OPT   = /#{RX_SOPT}|#{RX_LOPT}/
+RX_OPTS  = /#{RX_OPT}(?:, {0,2}#{RX_OPT})*/
+
+def doc_parse(help, pad: /(?:  ){1,2}/)
+  help.scan(/^#{pad}#{RX_OPTS}/).map{|line|    # get all opts
+    line.scan(RX_OPT).map{|opt|    # take each line
+      opt.split(/(?=\[=)|=| +/, 2) # separate flag from arg
+    }.map{|flag, arg|              # remove flag markers -/--, transform arg str into requirement
+      [flag.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must]
+    }.transpose                    # [[flag,arg],...]] -> [flags, args]
+    .then{|flags, args|  # hanfle -f,--foo=x style, without arg on short flag, and expand --[no]flag into --flag and --noflag (also --[no-])
+      args = args.uniq.tap{ it.delete :shant if it.size > 1 }                            # delete excess :shant (from -f in -f,--foo=x)
+      raise "flag #{flags} has conflicting arg requirements: #{args}" if args.size > 1   # raise if still conflict, like -f X, --ff [X]
+      [(flags.flat_map{|f| f.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : f }), args[0]] # [flags and noflags, resolved single arg]
+    }
+  }
 end
 
 
