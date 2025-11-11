@@ -3,13 +3,13 @@
 require "yaml"
 require "psych/y"
 
-Optdef = Data.define(:labels, :arg, :many, :default, :desc, :caster) do
-  def initialize(labels:, arg: nil, many: false, default: nil, desc: "", &caster)
+Optdef = Data.define(:labels, :arg) do
+  def initialize(labels:, arg: nil)
     labels = [*labels]
     labels[0] = labels[0].to_s.sub(/[!?]$/, "").to_sym unless arg
     arg ||= { ?? => :may, ?! => :must }[$&] || :shant
     %i[must may shant].include? arg or raise "invalid arg"
-    super labels:, arg:, many:, default:, desc:, caster:
+    super labels:, arg:
   end
 
   def arg? = self.arg != :shant
