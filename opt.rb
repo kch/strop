@@ -181,7 +181,8 @@ puts "=="
 parsed.each do |opt|
   case opt
   in Opt[label: :c]   then puts opt.value.upcase
-  in Opt[label: :opt] then puts opt.value
+  in Opt[label: :req] then puts opt.value+" IS REQ"
+  in Opt[value: nil]  then puts "#{opt.label}!"
   in Opt              then puts "#{opt.label}=#{opt.value}"
   in Arg              then p opt.value
   else puts "??"
