@@ -103,6 +103,13 @@ def parse(argv, optspec)
   end
 end
 
+def parse!(...) # same but catches errors, print msg, exit
+  parse(...)
+rescue OptionError => e
+  $stderr.puts e.message
+  exit 1
+end
+
 
 RX_SOARG = /\[\S+?\]/
 RX_SARG  = /[^\s,]+/
