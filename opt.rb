@@ -42,7 +42,7 @@ def parse(argv, optspec)
   rx_value = /\A[^-]|\A\z/
   loop do
     case ctx
-    when :end then break args += tokens.map{ Arg[it] }  # opt parsing ended, rest is positional args
+    when :end then return args += tokens.map{ Arg[it] }  # opt parsing ended, rest is positional args
     when :value then ctx = :top; args << Arg[token]     # interspersed positional arg amidst opts
 
     when :top
@@ -90,7 +90,6 @@ def parse(argv, optspec)
     else raise Unreachable
     end
   end
-
 end
 
 
