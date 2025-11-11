@@ -18,10 +18,12 @@ Optdef = Data.define(:names, :arg) do
 
   def arg? = self.arg != :shant
   def arg! = self.arg == :must
+  def to_s = names.map{ it.to_s.prepend it[1] ? "--" : "-"  }.join(", ") + { must: " X", may: " [X]", shant: ""  }[arg]
 end
 
 class Optspec < Array # a list of Optdefs
   def [](k) = self.find{ it.names.include? k.to_sym }
+  def to_s = join("\n")
 end
 
 
