@@ -90,7 +90,50 @@ def parse(argv, optspec)
     else raise Unreachable
     end
   end
+
 end
+
+
+
+
+require "strscan"
+
+def doc_parse(help)
+  rx_short  = /-[^-\s]( (\[\S+?\]|[^\s,]+))?/
+  rx_long   = /--(?=[^-\s])(\[no-?\])?[^\s=]+(\[=\S+?\]|[ =][^\s,]+)?/
+  opts = []
+  lines = help.lines
+  while line = lines.shift
+    ss = StringScanner.new(line)
+    ss.scan(/ +/) or next
+    flags = []
+    opt = {flags:, docs:[]}
+    while flag = ss.scan(rx_short) || ss.scan(rx_long)
+      opt[:flags] << flag
+      break unless ss.scan(/ *, */)
+    end
+    doc = nil
+    if ss.scan(/ +/)
+      nsp = ss.pos
+      doc = ss.scan(/\S.*/)
+    end
+    ss.scan(/\n/)
+    raise "no can parse: " + ss.rest.inspect if !ss.eos?
+    if doc
+      opt[:docs] << doc
+      rx_doc_cont = / {#{nsp}}( *\S.*)/
+      opt[:docs] << lines.shift[rx_doc_cont, 1] while lines.first&.=~(rx_doc_cont)
+    end
+    opts << opt
+  end
+  opts
+end
+
+
+y doc_parse DATA.read
+
+exit
+
 
 optspec = Optspec[
   Optdef.new(:d),
@@ -153,27 +196,31 @@ parsed.each do |opt|
 end
 
 
+
+
 __END__
-expect
---flag
---flag [arg]
---flag arg
---flag=arg
--fgh
--f123
--fgh23
--f 123
--f [123]
-words
+opts:
+  --flag1
+  --flag2 [arg]
+  --flag3 arg
+  --flag4=arg
+  -f,--flag5[=arg]
+  --[no]foo
+  --[no-]bar
+  -g
+  -h 123
+  -i [123],--fl[=123]
+  -j, --fl[=123]
 --
 
 
--r,-R,--foo[=BAR]
--r,-R,--foo [BAR] <- determ if mandatory from here too
--R [BAR], --foo[=BAR]
--r BAR,--foo BAR
--r,-[no]rrr
--r,-[no-]rrr
+  -r,-R,--foo[=BAR]
+  -r,-R,--foo [BAR] <- determ if mandatory from here too
+  -R [BAR], --foo[=BAR]
+  -r BAR,--foo BAR doc
+                   long doc
+  -r,--[no]rrr <arg>
+  -r,--[no-]rrr
 
 
 Optspec customizations:
