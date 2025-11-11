@@ -9,8 +9,8 @@ require "debug"
 
 Optdef = Data.define(:names, :arg) do
   def initialize(names:, arg: nil)
-    names = [*names].map(&:to_sym)
-    names[0] = names[0].to_s.sub(/[!?]$/, "").to_sym unless arg
+    names = [*names].map(&:to_s)
+    names[0] = names[0].sub(/[!?]$/, "") unless arg
     arg ||= { ?? => :may, ?! => :must }[$&] || :shant
     %i[must may shant].include? arg or raise "invalid arg"
     super names:, arg:
@@ -18,12 +18,12 @@ Optdef = Data.define(:names, :arg) do
 
   def arg? = self.arg != :shant
   def arg! = self.arg == :must
-  def to_s = names.map{ it.to_s.prepend it[1] ? "--" : "-"  }.join(", ") + { must: " X", may: " [X]", shant: ""  }[arg]
+  def to_s = names.map{ (it[1] ? "--" : "-")<<it  }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
 end
 
 class Optspec < Array # a list of Optdefs
   def self.from_doc(doc) = self[*doc_parse(doc).map{ Optdef[*it] }]
-  def [](k) = self.find{ it.names.include? k.to_sym }
+  def [](k, ...) = String === k ? self.find{ it.names.include? k } : super(k, ...)
   def to_s = join("\n")
 end
 
@@ -145,7 +145,8 @@ y opts
 
 for opt in opts
   case opt
-  in Opt[label: :help] then puts help
+  in Opt[label: "help"] then puts help[/^Usage.*/m].lines[0,15]
+  in Opt[label: "bar"] then puts opt
     # debugger
   else puts "???"
   end
