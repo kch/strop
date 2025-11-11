@@ -137,7 +137,20 @@ def doc_parse(help, pad: /(?:  ){1,2}/)
 end
 
 
-y doc_parse DATA.read
+help = DATA.read
+optspec = Optspec.from_doc help
+puts optspec.to_s
+opts = parse!(ARGV, optspec)
+y opts
+
+for opt in opts
+  case opt
+  in Opt[label: :help] then puts help
+    # debugger
+  else puts "???"
+  end
+end
+
 
 exit
 
@@ -181,7 +194,6 @@ tests = [
     rargs == args.map{it.value} or raise
     ropts == opts.map{ [it.name, it.value].compact } or raise
   end
-
 
 
 exit
