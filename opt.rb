@@ -173,7 +173,7 @@ tests = [
 
 exit
 
-test = tests.sample
+test = tests.sample[0]
 parsed = parse(test, optspec)
 p test
 y parsed
