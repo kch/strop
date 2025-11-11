@@ -22,7 +22,7 @@ end
 
 Opt = Data.define :optdef, :name, :value, :label do
   def initialize(optdef:, name:, value: nil)
-    label = optdef.names.find{ it.size > 1 } || optdef.names.first
+    label = optdef.names.find{ it.size > 1 } || optdef.names.first # the primary name we use to refer to it
     super(optdef:, name:, value:, label:)
   end
   def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
@@ -93,10 +93,6 @@ def parse(argv, optspec)
   end
 end
 
-
-
-
-require "strscan"
 
 RX_SOARG = /\[\S+?\]/
 RX_SARG  = /[^\s,]+/
