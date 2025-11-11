@@ -3,6 +3,10 @@
 require "yaml"
 require "psych/y"
 
+require "debug"
+
+# DEBUGGER__.add_catch_breakpoint "Exception"
+
 Optdef = Data.define(:names, :arg) do
   def initialize(names:, arg: nil)
     names = [*names].map(&:to_sym)
