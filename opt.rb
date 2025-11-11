@@ -168,7 +168,6 @@ tests = [
     ropts == opts.map{ [it.key, it.value].compact } or raise
   end
 
-# opts, args = parsed.group_by{it.class}.values_at(Opt, Arg)
 
 
 exit
