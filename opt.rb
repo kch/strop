@@ -20,11 +20,11 @@ Arg = Data.define :value do
   def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
 end
 
-Opt = Data.define :spec, :key, :value do
-  def initialize(spec:, key:, value: nil) = super(spec:, key:, value:)
+Opt = Data.define :spec, :name, :value do
+  def initialize(spec:, name:, value: nil) = super(spec:, name:, value:)
   def label = spec.labels.find{ it.size > 1 } || spec.labels.first
   def deconstruct_keys(...) = to_h.merge(label: label)
-  def encode_with(coder) = (coder.map = { self.key => self.value }; coder.tag = nil)
+  def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
 end
 
 class Unreachable < RuntimeError; end
@@ -165,7 +165,7 @@ tests = [
     puts "check: " + argv.inspect
     opts, args = parse(argv, optspec).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
     rargs == args.map{it.value} or raise
-    ropts == opts.map{ [it.key, it.value].compact } or raise
+    ropts == opts.map{ [it.name, it.value].compact } or raise
   end
 
 
