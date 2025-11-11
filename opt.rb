@@ -16,6 +16,11 @@ Optdef = Data.define(:names, :arg) do
   def arg! = self.arg == :must
 end
 
+class Optspec < Array # a list of Optdefs
+  def [](k) = self.find{ it.names.include? k.to_sym }
+end
+
+
 Arg = Data.define :value do
   def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
 end
@@ -29,10 +34,6 @@ Opt = Data.define :optdef, :name, :value, :label do
 end
 
 class Unreachable < RuntimeError; end
-
-class Optspec < Array
-  def [](k) = self.find{ it.names.include? k.to_sym }
-end
 
 
 def parse(argv, optspec)
