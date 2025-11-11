@@ -5,7 +5,7 @@ require "psych/y"
 
 Optdef = Data.define(:labels, :arg) do
   def initialize(labels:, arg: nil)
-    labels = [*labels]
+    labels = [*labels].map(&:to_sym)
     labels[0] = labels[0].to_s.sub(/[!?]$/, "").to_sym unless arg
     arg ||= { ?? => :may, ?! => :must }[$&] || :shant
     %i[must may shant].include? arg or raise "invalid arg"
