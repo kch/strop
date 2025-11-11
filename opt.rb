@@ -204,8 +204,10 @@ opts:
   -h 123
   -i [123],--fl[=123]
   -j, --fl[=123]
+  -a,-b,--foo=1,--bar,-c
 --
 
+  # -R BAR, --foo[=BAR]   this must fail
 
   -r,-R,--foo[=BAR]
   -r,-R,--foo [BAR] <- determ if mandatory from here too
