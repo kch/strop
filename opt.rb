@@ -129,14 +129,14 @@ exit
 
 
 optspec = Optspec[
-  Optdef.new(:d),
-  Optdef.new(:e),
-  Optdef.new(:a),
-  Optdef.new(:b?),
-  Optdef.new(:c!),
-  Optdef.new(:not),
-  Optdef.new(:opt?),
-  Optdef.new(:req!),
+  Optdef[:d],
+  Optdef[:e],
+  Optdef[:a],
+  Optdef[:b?],
+  Optdef[:c!],
+  Optdef[:not],
+  Optdef[:opt?],
+  Optdef[:req!],
 ]
 
 tests = [
