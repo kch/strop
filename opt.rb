@@ -121,16 +121,16 @@ RX_OPT   = /#{RX_SOPT}|#{RX_LOPT}/
 RX_OPTS  = /#{RX_OPT}(?:, {0,2}#{RX_OPT})*/
 
 def doc_parse(help, pad: /(?:  ){1,2}/)
-  help.scan(/^#{pad}#{RX_OPTS}/).map{|line|    # get all opts
-    line.scan(RX_OPT).map{|opt|    # take each line
-      opt.split(/(?=\[=)|=| +/, 2) # separate flag from arg
-    }.map{|flag, arg|              # remove flag markers -/--, transform arg str into requirement
+  help.scan(/^#{pad}#{RX_OPTS}/).map do |line| # get all opts
+    line.scan(RX_OPT).map do |opt|    # take each line
+      opt.split(/(?=\[=)|=| +/, 2)    # separate flag from arg
+    end.map do |flag, arg|            # remove flag markers -/--, transform arg str into requirement
       [flag.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must]
-    }.transpose                    # [[flag,arg],...]] -> [flags, args]
-    .then{|flags, args|  # hanfle -f,--foo=x style, without arg on short flag, and expand --[no]flag into --flag and --noflag (also --[no-])
+    end.transpose           # [[flag,arg], ...] -> [flags, args]
+    .then do |flags, args|  # hanfle -f,--foo=x style, without arg on short flag, and expand --[no]flag into --flag and --noflag (also --[no-])
       args = args.uniq.tap{ it.delete :shant if it.size > 1 }                            # delete excess :shant (from -f in -f,--foo=x)
       raise "flag #{flags} has conflicting arg requirements: #{args}" if args.size > 1   # raise if still conflict, like -f X, --ff [X]
       [(flags.flat_map{|f| f.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : f }), args[0]] # [flags and noflags, resolved single arg]
-    }
-  }
+    end
+  end
 end
