@@ -39,6 +39,9 @@ Opt = Data.define :optdef, :name, :value, :label do
   def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
 end
 
+Sep = :end_marker
+
+
 class Unreachable < RuntimeError; end
 class OptionError < ArgumentError; end
 
@@ -58,10 +61,10 @@ def parse(argv, optspec)
     when :top
       token = tokens.shift or next ctx = :end                                   # next token or done
       case token
-      when "--"              then ctx = :end                                    # end of options
-      when /\A-([^-].*)\z/m  then token, ctx = $1, :short                       # short or clump (-a, -abc)
-      when /\A--([^-].+)\z/m then token, ctx = $1, :long                        # long (--foo, --foo xxx), long with attached value (--foo=xxx)
-      when rx_value          then ctx = :value                                  # value
+      when "--"          then ctx = :end; args << Sep                           # end of options
+      when /\A--(.+)\z/m then token, ctx = $1, :long                            # long (--foo, --foo xxx), long with attached value (--foo=xxx)
+      when /\A-(.+)\z/m  then token, ctx = $1, :short                           # short or clump (-a, -abc)
+      when rx_value      then ctx = :value                                      # value
       else raise Unreachable
       end
 
