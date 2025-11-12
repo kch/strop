@@ -41,6 +41,11 @@ end
 
 Sep = :end_marker
 
+class Result < Array
+  def rest = drop_while{ it != Sep }.drop(1) # args after sep
+  def args = select { Arg === it }
+  def opts = select { Opt === it }
+end
 
 class Unreachable < RuntimeError; end
 class OptionError < ArgumentError; end
@@ -49,19 +54,19 @@ def parse(argv, optspec)
   Array === argv && argv.all?{ String === it } or raise "argv must be an array of strings (given #{argv.class})"
   Optspec === optspec or raise "optspec must be an Optspec (given #{optspec.class})"
   tokens = argv.dup
-  args = []
+  res = Result.new
   ctx = :top
   flag, token, opt = nil
   rx_value = /\A[^-]|\A\z/
   loop do
     case ctx
-    when :end then return args += tokens.map{ Arg[it] }  # opt parsing ended, rest is positional args
-    when :value then ctx = :top; args << Arg[token]      # interspersed positional arg amidst opts
+    when :end then return res.concat tokens.map{ Arg[it] } # opt parsing ended, rest is positional args
+    when :value then ctx = :top; res << Arg[token]         # interspersed positional arg amidst opts
 
     when :top
       token = tokens.shift or next ctx = :end                                   # next token or done
       case token
-      when "--"          then ctx = :end; args << Sep                           # end of options
+      when "--"          then ctx = :end; res << Sep                            # end of options
       when /\A--(.+)\z/m then token, ctx = $1, :long                            # long (--foo, --foo xxx), long with attached value (--foo=xxx)
       when /\A-(.+)\z/m  then token, ctx = $1, :short                           # short or clump (-a, -abc)
       when rx_value      then ctx = :value                                      # value
@@ -72,8 +77,8 @@ def parse(argv, optspec)
       flag, value = token =~ /\A(.*?)=/m ? [$1, $'] : [token, nil]
       opt = optspec[flag] or raise OptionError, "Unknown option: --#{flag}"
       case
-      when  opt.arg? &&  value then ctx = :top; args << Opt[opt, flag, value]   # --foo=XXX
-      when !opt.arg? && !value then ctx = :top; args << Opt[opt, flag]          # --foo
+      when  opt.arg? &&  value then ctx = :top; res << Opt[opt, flag, value]    # --foo=XXX
+      when !opt.arg? && !value then ctx = :top; res << Opt[opt, flag]           # --foo
       when  opt.arg? && !value then ctx = :arg                                  # --foo XXX
       when !opt.arg? &&  value then raise OptionError, "Option --#{flag} takes no argument"
       else raise Unreachable
@@ -83,10 +88,10 @@ def parse(argv, optspec)
       flag, token = token[0], token[1..].then{ it != "" ? it : nil }            # -abc -> a, bc
       opt = optspec[flag] or raise OptionError, "Unknown option: -#{flag}"
       case
-      when  opt.arg? &&  token then ctx = :top; args << Opt[opt, flag, token]   # -aXXX
-      when !opt.arg? && !token then ctx = :top; args << Opt[opt, flag]          # end of -abc
+      when  opt.arg? &&  token then ctx = :top; res << Opt[opt, flag, token]    # -aXXX
+      when !opt.arg? && !token then ctx = :top; res << Opt[opt, flag]           # end of -abc
       when  opt.arg? && !token then ctx = :arg                                  # -a XXX
-      when !opt.arg? &&  token then args << Opt[opt, flag]                      # -abc -> took -a, will parse -bc
+      when !opt.arg? &&  token then res << Opt[opt, flag]                       # -abc -> took -a, will parse -bc
       else raise Unreachable
       end
 
@@ -94,9 +99,9 @@ def parse(argv, optspec)
       token = tokens[0]&.=~(rx_value) ? tokens.shift : nil
       case
       when opt.arg! && !token then raise OptionError, "Expected argument for option -#{?- if flag[1]}#{flag}" # --req missing value; (!peek implied)
-      when opt.arg! &&  token then ctx = :top; args << Opt[opt, flag, token]    # --req val
-      when opt.arg? &&  token then ctx = :top; args << Opt[opt, flag, token]    # --opt val
-      when opt.arg? && !token then ctx = :top; args << Opt[opt, flag]           # --opt followed by --foo, --opt as last token
+      when opt.arg! &&  token then ctx = :top; res << Opt[opt, flag, token]     # --req val
+      when opt.arg? &&  token then ctx = :top; res << Opt[opt, flag, token]     # --opt val
+      when opt.arg? && !token then ctx = :top; res << Opt[opt, flag]            # --opt followed by --foo, --opt as last token
       else raise Unreachable
       end
 
