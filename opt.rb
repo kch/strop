@@ -68,17 +68,6 @@ def parse(argv, optspec)
       else raise Unreachable
       end
 
-    when :short
-      flag, token = token[0], token[1..].then{ it != "" ? it : nil }            # -abc -> a, bc
-      opt = optspec[flag] or raise OptionError, "Unknown option: -#{flag}"
-      case
-      when  opt.arg? &&  token then ctx = :top; args << Opt[opt, flag, token]   # -aXXX
-      when !opt.arg? && !token then ctx = :top; args << Opt[opt, flag]          # end of -abc
-      when  opt.arg? && !token then ctx = :arg                                  # -a XXX
-      when !opt.arg? &&  token then args << Opt[opt, flag]                      # -abc -> took -a, will parse -bc
-      else raise Unreachable
-      end
-
     when :long
       flag, value = token =~ /\A(.*?)=/m ? [$1, $'] : [token, nil]
       opt = optspec[flag] or raise OptionError, "Unknown option: --#{flag}"
@@ -87,6 +76,17 @@ def parse(argv, optspec)
       when !opt.arg? && !value then ctx = :top; args << Opt[opt, flag]          # --foo
       when  opt.arg? && !value then ctx = :arg                                  # --foo XXX
       when !opt.arg? &&  value then raise OptionError, "Option --#{flag} takes no argument"
+      else raise Unreachable
+      end
+
+    when :short
+      flag, token = token[0], token[1..].then{ it != "" ? it : nil }            # -abc -> a, bc
+      opt = optspec[flag] or raise OptionError, "Unknown option: -#{flag}"
+      case
+      when  opt.arg? &&  token then ctx = :top; args << Opt[opt, flag, token]   # -aXXX
+      when !opt.arg? && !token then ctx = :top; args << Opt[opt, flag]          # end of -abc
+      when  opt.arg? && !token then ctx = :arg                                  # -a XXX
+      when !opt.arg? &&  token then args << Opt[opt, flag]                      # -abc -> took -a, will parse -bc
       else raise Unreachable
       end
 
