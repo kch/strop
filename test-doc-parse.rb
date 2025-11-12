@@ -6,7 +6,7 @@ HELP = <<HELP.gsub("PROG", File.basename($0))
 Usage PROG
 
 opts:
-  --help
+  -h,--help
   --flag1
   --flag2 [arg]
   --flag3 arg
