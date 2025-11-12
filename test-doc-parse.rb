@@ -21,7 +21,7 @@ opts:
   # -a,-b,--foo=1,--bar,-c
 --
 
-  # -R BAR, --foo[=BAR]   this must fail
+  # -R BAR, --foo[=BAR]   this must fail (optional and reuired args)
 
   -r,-R,--foo[=BAR]
   -r,-R,--foo [BAR] <- determ if mandatory from here too
