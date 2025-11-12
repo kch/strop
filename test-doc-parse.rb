@@ -2,27 +2,8 @@
 
 require_relative "opt"
 
-puts "call me with --help or try --bar / --no-bar" if ARGV.empty?
-
-help = DATA.read
-optspec = Optspec.from_help help
-# puts optspec.to_s
-opts = parse!(ARGV, optspec)
-# y opts
-
-for opt in opts
-  case opt
-  in Opt[label: "help"] then puts help
-  in Opt[label: "bar", name: "no-bar"]  then puts "nobar!"
-  in Opt[label: "bar"]  then puts puts "yes-bar"
-  else puts "???"
-  end
-end
-
-
-
-__END__
-Usage lol
+HELP = <<HELP.gsub("PROG", File.basename($0))
+Usage PROG
 
 opts:
   --help
@@ -55,3 +36,21 @@ Optspec customizations:
 - any flag, return a magic optdef, letting any flag true
 
 keep -- in resutls? like in git separate args from paths etc
+HELP
+
+
+puts "call me with --help or try --bar / --no-bar" if ARGV.empty?
+
+optspec = Optspec.from_help HELP
+# puts optspec.to_s
+opts = parse!(ARGV, optspec)
+# y opts
+
+for opt in opts
+  case opt
+  in Opt[label: "help"] then puts HELP
+  in Opt[label: "bar", name: "no-bar"]  then puts "nobar!"
+  in Opt[label: "bar"]  then puts puts "yes-bar"
+  else puts "???"
+  end
+end
