@@ -26,13 +26,17 @@ tests = [
   [%w[ -a b c w z ],                   %w[ a ], %w[ b c w z ]],
   [%w[ -a b c d -- z ],                %w[ a ], %w[ b c d z ]],
   [%w[ -a -- ],                        %w[ a ], %w[]],
+  [%w[ --a ],                          %w[ a ], %w[]],
+  [%w[ --b=1 ],                        %w[ b=1 ], %w[]],
   [%w[ -a -b c -- z ],                 %w[ a b=c ], %w[ z ]],
   [%w[ -a -b -- z ],                   %w[ a b ], %w[ z ]],
   [%w[ -aabcd --req=foo -- z ],        %w[ a a b=cd req=foo ], %w[ z ]],
   [%w[ --opt --not ],                  %w[ opt not ], %w[]],
   [%w[ --opt ],                        %w[ opt ], %w[]],
+  [%w[ --req= ],                       %w[ req= ], %w[]],
   [%w[ --opt=foo=bar ],                %w[ opt=foo=bar ], %w[]],
   [%w[ -cabd --opt=--foo -- z ],       %w[ c=abd opt=--foo ], %w[ z ]],
+  [%w[ --req=--foo=bar ],              %w[ req=--foo=bar ], %w[ ]],
   [%w[ -a --not nop --opt --req foo z ], %w[ a not opt req=foo ], %w[ nop z ]],
   ].map {|a,b,c| [a, b.map{ it.split(?=, 2) },c] }
   .each do |argv, ropts, rargs|
@@ -41,6 +45,13 @@ tests = [
     rargs == args.map{it.value} or raise
     ropts == opts.map{ [it.name, it.value].compact } or raise
   end
+
+fails = %w[ --err  ---  --=  --not=1  -a1  --a=1 -z -az -c --req ]
+fails.each do |argv|
+  parse([argv], optspec)
+  raise "Should fail: #{argv}"
+rescue OptionError
+end
 
 
 # exit
