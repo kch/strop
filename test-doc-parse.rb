@@ -43,10 +43,14 @@ puts "call me with --help or try --bar / --no-bar" if ARGV.empty?
 
 optspec = Optspec.from_help HELP
 # puts optspec.to_s
-opts = parse!(ARGV, optspec)
-# y opts
+res = parse!(ARGV, optspec)
+o,a,rest = res.opts, res.args, res.rest
+y res
+y o
+y a
+y rest
 
-for opt in opts
+for opt in res
   case opt
   in Opt[label: "help"] then puts HELP
   in Opt[label: "bar", name: "no-bar"]  then puts "nobar!"
