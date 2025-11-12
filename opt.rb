@@ -53,7 +53,7 @@ def parse(argv, optspec)
   loop do
     case ctx
     when :end then return args += tokens.map{ Arg[it] }  # opt parsing ended, rest is positional args
-    when :value then ctx = :top; args << Arg[token]     # interspersed positional arg amidst opts
+    when :value then ctx = :top; args << Arg[token]      # interspersed positional arg amidst opts
 
     when :top
       token = tokens.shift or next ctx = :end                                   # next token or done
