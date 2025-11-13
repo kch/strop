@@ -80,7 +80,7 @@ module Optionated
       names[0] = names[0].sub(/[!?]$/, "") unless arg
       label = names.find{ it.size > 1 } || names.first # the canonical name
       arg ||= { ?? => :may, ?! => :must }[$&] || :shant
-      %i[must may shant].include? arg or raise "invalid arg"
+      %i[must may shant].member? arg or raise "invalid arg"
       super names:, arg:, label:
     end
 
@@ -119,7 +119,7 @@ module Optionated
   Opt = Data.define :optdef, :name, :value, :label, :no do
     def initialize(optdef:, name:, value: nil)
       label = optdef.label # repeated here to can be pattern-matched against
-      no = name =~ /\Ano-?/ && optdef.names.include?($')
+      no = name =~ /\Ano-?/ && optdef.names.member?($')
       super(optdef:, name:, value:, label:, no: !!no)
     end
     alias no? no
