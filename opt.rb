@@ -93,7 +93,7 @@ module Optionated
   end
 
   class Optspec < Array # a list of Optdefs
-    def self.from_help(doc) = self[*Optionated.parse_help(doc).map{ Optdef[*it] }]
+    def self.from_help(doc) = Optionated.parse_help(doc)
     def [](k, ...) = String === k ? self.find{ it.names.include? k } : super(k, ...)
     def to_s = join("\n")
   end
@@ -212,7 +212,10 @@ module Optionated
         raise "flag #{flags} has conflicting arg requirements: #{args}" if args.size > 1   # raise if still conflict, like -f X, --ff [X]
         [(flags.flat_map{|f| f.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : f }).uniq, args[0]] # [flags and noflags, resolved single arg]
       end
-    end
+    end.uniq.tap do |list| # [[[flag, flag, ...], arg, more opts ...]
+      dupes = list.flat_map(&:first).tally.reject{|k,v|v==1}
+      raise "Flags #{dupes.keys.inspect} seen more than once in distinct definitions" if dupes.any?
+    end.map{ Optdef[*it] }.then{ Optspec[*it] }
   end
 
   module Exports
