@@ -4,7 +4,7 @@
 #
 # Core workflow:
 #   spec = Optspec.from_help(help_text)  # extract from help
-#   args = parse(ARGV, spec)             # parse argv -> Args
+#   args = parse(ARGV, spec)             # parse argv -> Result
 #   args = parse!(ARGV, spec)            # exits on error
 #
 # Manual spec building:
@@ -38,7 +38,7 @@
 #   label can be used for matching results as below:
 #
 # Processing parsed results:
-#   args.each do |item|
+#   res.each do |item|
 #     case item
 #     in Opt[label: "help"]                    then show_help
 #     in Opt[label: "verbose", value:]         then set_verbose(value)
@@ -49,10 +49,6 @@
 #     in Sep                                   then break
 #     end
 #   end
-#
-# [no-] option matching:
-#   --[no-]color creates two options with same label "color"
-#   Match specific name first, then generic label for correct handling
 #
 # Help text format for parsing (auto-extracts indented option lines):
 #   -f, --foo                            # flag
