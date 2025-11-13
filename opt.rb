@@ -80,7 +80,7 @@ module Optionated
 
   Optdef = Data.define(:names, :arg) do
     def initialize(names:, arg: nil)
-      names = [*names].map(&:to_s)
+      names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it }
       names[0] = names[0].sub(/[!?]$/, "") unless arg
       arg ||= { ?? => :may, ?! => :must }[$&] || :shant
       %i[must may shant].include? arg or raise "invalid arg"

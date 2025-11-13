@@ -15,6 +15,8 @@ optspec = Optspec[
   Optdef[:not],
   Optdef[:opt?],
   Optdef[:req!],
+  Optdef[:foo_bar],
+  Optdef["foo_bar"],
 ]
 
 tests = [
