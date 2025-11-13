@@ -4,7 +4,6 @@ require_relative "opt"
 require "yaml"
 require "psych/y"
 
-
 HELP = <<HELP.gsub("PROG", File.basename($0))
 Usage PROG
 
@@ -44,9 +43,11 @@ HELP
 
 puts "call me with --help or try --bar / --no-bar" if ARGV.empty?
 
+
+include Optionated
 optspec = Optspec.from_help HELP
 # puts optspec.to_s
-res = parse!(ARGV, optspec)
+res = Optionated::parse!(ARGV, optspec)
 o,a,rest = res.opts, res.args, res.rest
 y res
 y o
