@@ -93,7 +93,22 @@ module Optionated
   class Optspec < Array # a list of Optdefs
     def self.from_help(doc) = Optionated.parse_help(doc)
     def [](k, ...) = String === k ? self.find{ it.names.include? k } : super(k, ...)
-    def to_s = join("\n")
+    def to_s(as=:plain)
+      case as
+      when :plain then join("\n")
+      when :case
+        caseins = map{|os| "in label: #{os.label.inspect}".tap{ it << ", value:" if os.arg? }}
+        len = caseins.map(&:size).max
+        caseins = caseins.zip(self).map{ |s,o| s.ljust(len) + " then#{' opt.no?' if o.no?} # #{o}" }
+        puts <<~RUBY
+          for opt in result
+            case opt
+            #{caseins.map{ "  #{it}" }.join("\n").lstrip}
+            end
+          end
+        RUBY
+      end
+    end
   end
 
 
