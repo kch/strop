@@ -138,8 +138,8 @@ module Optionated
 
   class Result < Array
     def rest = drop_while{ it != Sep }.drop(1) # args after sep
-    def args = select { Arg === it }
-    def opts = select { Opt === it }
+    def args = Result.new(select { Arg === it })
+    def opts = Result.new(select { Opt === it })
   end
 
   class Unreachable < RuntimeError; end
