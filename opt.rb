@@ -72,7 +72,7 @@
 # require "debug"
 # DEBUGGER__.add_catch_breakpoint "Exception"
 
-module Optionated
+module TipTopt
 
   Optdef = Data.define(:names, :arg, :label) do
     def initialize(names:, arg: nil)
@@ -91,7 +91,7 @@ module Optionated
   end
 
   class Optspec < Array # a list of Optdefs
-    def self.from_help(doc) = Optionated.parse_help(doc)
+    def self.from_help(doc) = TipTopt.parse_help(doc)
     def [](k, ...) = [String, Symbol].any?{ it === k } ? self.find{ it.names.member? k.to_s } : super(k, ...)
     def to_s(as=:plain)
       case as
@@ -129,11 +129,11 @@ module Optionated
   Sep = :end_marker
 
   module Exports
-    Optspec = Optionated::Optspec
-    Optdef  = Optionated::Optdef
-    Opt     = Optionated::Opt
-    Arg     = Optionated::Arg
-    Sep     = Optionated::Sep
+    Optspec = TipTopt::Optspec
+    Optdef  = TipTopt::Optdef
+    Opt     = TipTopt::Opt
+    Arg     = TipTopt::Arg
+    Sep     = TipTopt::Sep
   end
 
   class Result < Array

@@ -4,7 +4,7 @@ require_relative "opt"
 require "yaml"
 require "psych/y"
 
-include Optionated::Exports
+include TipTopt::Exports
 
 optspec = Optspec[
   Optdef[:d],
@@ -47,23 +47,23 @@ tests = [
   ].map {|a,b,c| [a, b.map{ it.split(?=, 2) },c] }
   .each do |argv, ropts, rargs|
     puts "check: " + argv.inspect
-    opts, args = Optionated.parse(argv, optspec).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
+    opts, args = TipTopt.parse(argv, optspec).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
     rargs == args.map{it.value} or raise
     ropts == opts.map{ [it.name, it.value].compact } or raise
   end
 
 fails = %w[ --err  ---  --=  --not=1  -a1  --a=1 -z -az -c --req ]
 fails.each do |argv|
-  Optionated.parse([argv], optspec)
+  TipTopt.parse([argv], optspec)
   raise "Should fail: #{argv}"
-rescue Optionated::OptionError
+rescue TipTopt::OptionError
 end
 
 
 # exit
 
 test = tests.sample[0]
-parsed = Optionated.parse!(test, optspec)
+parsed = TipTopt.parse!(test, optspec)
 p test
 y parsed
 puts "=="

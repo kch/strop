@@ -26,10 +26,10 @@ HELP
 puts "call me with --help or try --bar / --no-bar" if ARGV.empty?
 
 
-include Optionated
+include TipTopt
 optspec = Optspec.from_help HELP
 # puts optspec.to_s
-res = Optionated::parse!(ARGV, optspec)
+res = TipTopt::parse!(ARGV, optspec)
 o,a,rest = res.opts, res.args, res.rest
 y res
 y o
