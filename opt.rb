@@ -87,7 +87,7 @@ module TipTopt
     def no?  = names.each_cons(2).any?{|a,b| b =~ /\Ano-?#{Regexp.escape a}\z/ }
     def arg? = self.arg != :shant
     def arg! = self.arg == :must
-    def to_s = names.map{ (it[1] ? "--" : "-")<<it  }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
+    def to_s = names.map{ (it[1] ? "--" : "-")<<it }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
   end
 
   class Optspec < Array # a list of Optdefs
