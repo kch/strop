@@ -136,7 +136,7 @@ module TipTopt
     Sep     = TipTopt::Sep
   end
 
-  class Result < Array
+  class Result < Array # of Opt, Arg, Sep
     def rest = drop_while{ it != Sep }.drop(1) # args after sep
     def args = Result.new(select { Arg === it })
     def opts = Result.new(select { Opt === it })
