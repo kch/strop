@@ -54,7 +54,7 @@
 #   --[no-]color creates two options with same label "color"
 #   Match specific name first, then generic label for correct handling
 #
-# Help text parsing (auto-extracts indented option lines):
+# Help text format for parsing (auto-extracts indented option lines):
 #   -f, --foo                            # flag
 #   -f, --foo X                          # required arg
 #   -f, --foo [X]                        # optional arg
