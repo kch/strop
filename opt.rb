@@ -140,6 +140,12 @@ module Optionated
     def rest = drop_while{ it != Sep }.drop(1) # args after sep
     def args = Result.new(select { Arg === it })
     def opts = Result.new(select { Opt === it })
+    def [](k, ...)
+      case k
+      when String, Symbol then find{ Opt === it && it.optdef.names.member?(k.to_s) }
+      else super(k, ...)
+      end
+    end
   end
 
   class Unreachable < RuntimeError; end
