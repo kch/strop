@@ -14,6 +14,7 @@ opts:
   --flag3 arg
   --flag4=arg
   -f,--flag5[=arg]
+  --noggins
   --[no]foo
   --[no-]bar
   -g
@@ -38,8 +39,8 @@ y rest
 for opt in res
   case opt
   in Opt[label: "help"] then puts HELP
-  in Opt[label: "bar", name: "no-bar"]  then puts "nobar!"
-  in Opt[label: "bar"]  then puts puts "yes-bar"
+  in Opt[label: "bar"]  then puts opt.no? ? "NObar" : "YESbar"
+  in Opt[label: "noggins"] then puts "nog #{opt.no?}" # should be false
   else puts "???"
   end
 end

@@ -31,6 +31,7 @@
 #   Opt.name                             # matched name ("f" or "foo")
 #   Opt.value                            # "bar" or nil
 #   Opt.label                            # primary display name
+#   Opt.no?                              # true if --no-foo variant used
 #   Arg.value                            # positional argument
 #   Sep                                  # -- separator marker
 #
@@ -43,8 +44,7 @@
 #     in Opt[label: "help"]                    then show_help
 #     in Opt[label: "verbose", value:]         then set_verbose(value)
 #     in Opt[label: "output", value: nil]      then output = :stdout
-#     in Opt[label: "color", name: "no-color"] then disable_color  # --no-color
-#     in Opt[label: "color"]                   then enable_color   # --color
+#     in Opt[label: "color"]                   then opt.no? ? disable_color : enable_color
 #     in Arg[value:]                           then files << value
 #     in Sep                                   then break
 #     end
@@ -83,6 +83,7 @@ module Optionated
       super names:, arg:
     end
 
+    def no?  = names.each_cons(2).any?{|a,b| b =~ /\Ano-?#{Regexp.escape a}\z/ }
     def arg? = self.arg != :shant
     def arg! = self.arg == :must
     def to_s = names.map{ (it[1] ? "--" : "-")<<it  }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
@@ -99,11 +100,13 @@ module Optionated
     def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
   end
 
-  Opt = Data.define :optdef, :name, :value, :label do
+  Opt = Data.define :optdef, :name, :value, :label, :no do
     def initialize(optdef:, name:, value: nil)
       label = optdef.names.find{ it.size > 1 } || optdef.names.first # the primary name we use to refer to it
-      super(optdef:, name:, value:, label:)
+      no = name =~ /\Ano-?/ && optdef.names.include?($')
+      super(optdef:, name:, value:, label:, no: !!no)
     end
+    alias no? no
     def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
   end
 
