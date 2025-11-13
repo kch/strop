@@ -92,7 +92,7 @@ module Optionated
 
   class Optspec < Array # a list of Optdefs
     def self.from_help(doc) = Optionated.parse_help(doc)
-    def [](k, ...) = String === k ? self.find{ it.names.include? k } : super(k, ...)
+    def [](k, ...) = [String, Symbol].any?{ it === k } ? self.find{ it.names.member? k.to_s } : super(k, ...)
     def to_s(as=:plain)
       case as
       when :plain then join("\n")
