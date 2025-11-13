@@ -112,6 +112,14 @@ module Optionated
 
   Sep = :end_marker
 
+  module Exports
+    Optspec = Optionated::Optspec
+    Optdef  = Optionated::Optdef
+    Opt     = Optionated::Opt
+    Arg     = Optionated::Arg
+    Sep     = Optionated::Sep
+  end
+
   class Result < Array
     def rest = drop_while{ it != Sep }.drop(1) # args after sep
     def args = select { Arg === it }
@@ -217,12 +225,5 @@ module Optionated
     end.map{ Optdef[*it] }.then{ Optspec[*it] }
   end
 
-  module Exports
-    Opt     = Optionated::Opt
-    Arg     = Optionated::Arg
-    Sep     = Optionated::Sep
-    Optdef  = Optionated::Optdef
-    Optspec = Optionated::Optspec
-  end
 
 end
