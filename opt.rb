@@ -74,13 +74,14 @@
 
 module Optionated
 
-  Optdef = Data.define(:names, :arg) do
+  Optdef = Data.define(:names, :arg, :label) do
     def initialize(names:, arg: nil)
       names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it }
       names[0] = names[0].sub(/[!?]$/, "") unless arg
+      label = names.find{ it.size > 1 } || names.first # the canonical name
       arg ||= { ?? => :may, ?! => :must }[$&] || :shant
       %i[must may shant].include? arg or raise "invalid arg"
-      super names:, arg:
+      super names:, arg:, label:
     end
 
     def no?  = names.each_cons(2).any?{|a,b| b =~ /\Ano-?#{Regexp.escape a}\z/ }
@@ -102,7 +103,7 @@ module Optionated
 
   Opt = Data.define :optdef, :name, :value, :label, :no do
     def initialize(optdef:, name:, value: nil)
-      label = optdef.names.find{ it.size > 1 } || optdef.names.first # the primary name we use to refer to it
+      label = optdef.label # repeated here to can be pattern-matched against
       no = name =~ /\Ano-?/ && optdef.names.include?($')
       super(optdef:, name:, value:, label:, no: !!no)
     end
