@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 
 require_relative "opt"
+require "yaml"
+require "psych/y"
+
 
 HELP = <<HELP.gsub("PROG", File.basename($0))
 Usage PROG

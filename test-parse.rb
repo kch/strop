@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
 require_relative "opt"
+require "yaml"
+require "psych/y"
 
 optspec = Optspec[
   Optdef[:d],

@@ -1,9 +1,79 @@
 #!/usr/bin/env ruby
 
-require "yaml"
-require "psych/y"
-require "debug"
+# Command-line option parser
+#
+# Core workflow:
+#   spec = Optspec.from_help(help_text)  # extract from help
+#   args = parse(ARGV, spec)             # parse argv -> Args
+#   args = parse!(ARGV, spec)            # exits on error
+#
+# Manual spec building:
+#   Optdef[:f]                           # flag only
+#   Optdef[:f?]                          # optional arg
+#   Optdef[:f!]                          # required arg
+#   Optdef[[:f, :foo]]                   # multiple names
+#   Optdef[names: [:f, :foo], arg: :may] # explicit form
+#
+#   optspec = Optspec[optdef1, optdef2]  # combine into spec
+#   optspec["f"]                         # lookup by name
+#
+# Argument requirements:
+#   :shant - no argument allowed
+#   :may   - optional argument (takes next token if not option-like)
+#   :must  - required argument (error if missing)
+#
+# Parse results: Result (Array of Opt, Arg, Sep)
+#   res.opts                             # all Opt objects
+#   res.args                             # all Arg objects
+#   res.rest                             # args after -- separator
+#
+#   Opt.optdef                           # matched Optdef
+#   Opt.name                             # matched name ("f" or "foo")
+#   Opt.value                            # "bar" or nil
+#   Opt.label                            # primary display name
+#   Arg.value                            # positional argument
+#   Sep                                  # -- separator marker
+#
+#   label is the first long name or first name if no long found
+#   label can be used for matching results as below:
+#
+# Processing parsed results:
+#   args.each do |item|
+#     case item
+#     in Opt[label: "help"]                    then show_help
+#     in Opt[label: "verbose", value:]         then set_verbose(value)
+#     in Opt[label: "output", value: nil]      then output = :stdout
+#     in Opt[label: "color", name: "no-color"] then disable_color  # --no-color
+#     in Opt[label: "color"]                   then enable_color   # --color
+#     in Arg[value:]                           then files << value
+#     in Sep                                   then break
+#     end
+#   end
+#
+# [no-] option matching:
+#   --[no-]color creates two options with same label "color"
+#   Match specific name first, then generic label for correct handling
+#
+# Help text parsing (auto-extracts indented option lines):
+#   -f, --foo                            # flag
+#   -f, --foo X                          # required arg
+#   -f, --foo [X]                        # optional arg
+#   --foo=X, --foo [=X]                  # required/optional with =
+#   --[no-]foo, --[no]foo                # --foo/--nofoo pair
+#
+#   --[no-]foo and --[no]foo are both supported by parse_help.
+#
+# Command-line parsing features:
+#   -abc                                 # short option clumping (-a -b -c)
+#   -fVAL, --foo=VAL                     # attached values
+#   -f VAL, --foo VAL                    # separate values
+#   --foo val -- --bar                   # --bar becomes positional after --
+#   intermixed args and options          # flexible ordering
 
+
+# require "yaml"
+# require "psych/y"
+# require "debug"
 # DEBUGGER__.add_catch_breakpoint "Exception"
 
 Optdef = Data.define(:names, :arg) do
