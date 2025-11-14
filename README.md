@@ -1,4 +1,4 @@
-# Command-line Option Parser
+# Strop: Command-line Option Parser
 
 ## Distinctive features
 
@@ -8,6 +8,12 @@
 ## Core workflow
 
 ```ruby
+help_text = <<~HELP
+Options:
+  -f, --flag              Flag
+  -v, --verbose LEVEL     Required arg
+  -o, --output [FILE]     Optional arg
+HELP
 opts = Optlist.from_help(help_text)  # extract from help
 result = Strop.parse(opts, ARGV)     # parse argv -> Result
 result = Strop.parse!(opts, ARGV)    # same but on error prints message and exits
@@ -35,7 +41,7 @@ Or, more succinctly:
 Strop.parse!(help).each do |item|
   case item
   in label: "help" then show_help     # only Opt has .label
-  in arg:          then files << arg  # `value:` might match an Opt, so Arg offters alias .arg
+  in arg:          then files << arg  # `value:` might match an Opt, so Arg offers alias .arg
   end
 end
 ```
@@ -50,22 +56,22 @@ puts Strop::Optlist.from_help(help_text).to_s(:case)
 ## Result members (Array of Opt, Arg, Sep)
 
 ```ruby
-res.opts                             # all Opt objects
-res.args                             # all Arg objects
-res.rest                             # args after -- separator
-res["flag"]                          # find opt by name
+res.opts     # all Opt objects
+res.args     # all Arg objects
+res.rest     # args after -- separator
+res["flag"]  # find opt by name
 
 opt = res.opts.first
 arg = res.args.first
-opt.decl                             # Optdecl matched for this Opt instance
-opt.name                             # name used in invocation (could differ from label)
-opt.value                            # argument passed to this option
-opt.label                            # primary name (first long name or first name), used for pattern matching
-opt.no?                              # true if --no-foo variant used
-opt.yes?                             # opposite of `no?`
-arg.value                            # positional argument
-arg.arg                              # same as .value, useful for pattern matching
-Sep                                  # -- end of options marker; Const, not instantiated
+opt.decl     # Optdecl matched for this Opt instance
+opt.name     # name used in invocation (could differ from label)
+opt.value    # argument passed to this option
+opt.label    # primary name (first long name or first name), used for pattern matching
+opt.no?      # true if --no-foo variant used
+opt.yes?     # opposite of `no?`
+arg.value    # positional argument
+arg.arg      # same as .value, useful for pattern matching
+Sep          # -- end of options marker; Const, not instantiated
 ```
 
 Notice that parsing `--[no-]flag` from help results in a single `Optdecl[:flag, :"no-flag"]`, and you can use `yes?`/`no?` to check which was passed.
