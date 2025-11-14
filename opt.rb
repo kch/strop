@@ -3,18 +3,29 @@
 # Command-line option parser
 #
 # Core workflow:
-#   spec = Optlist.from_help(help_text)  # extract from help
-#   args = parse(ARGV, spec)             # parse argv -> Result
-#   args = parse!(ARGV, spec)            # exits on error
+#   opts = Optlist.from_help(help_text)  # extract from help
+#   args = parse(ARGV, opts)             # parse argv -> Result
+#   args = parse!(ARGV, opts)            # exits on error
 #
-# Manual spec building:
-#   Optdecl[:f]                           # flag only
-#   Optdecl[:f?]                          # optional arg
-#   Optdecl[:f!]                          # required arg
-#   Optdecl[[:f, :foo]]                   # multiple names
-#   Optdecl[names: [:f, :foo], arg: :may] # explicit form
+# Manual option declaration building:
+#   Optdecl[:f]                           # flag only: -f
+#   Optdecl[:f?]                          # optional arg: -f [X]
+#   Optdecl[:f!]                          # required arg: -f x
+#   Optdecl[[:f, :foo]]                   # multiple names: -f or --foo
+#   Optdecl[names: [:f, :foo], arg: :may] # explicit arg form
 #
-#   optlist = Optlist[optdecl1, optdecl2] # combine into spec
+#   Single char opts: short flag -f, otherwise --flag
+#
+#   Use explicit form if you want to use ?/! in option name:
+#   Optdecl[:?, arg: :shant]              # allows -? option
+#
+#   Strings are accepted too. Underscores in symbol names get
+#   replaced with -, but not in strings.
+#
+#   Optdecl["foo_bar"] # --foo_bar
+#   Optdecl[:foo_bar]  # --foo-bar
+#
+#   optlist = Optlist[optdecl1, optdecl2] # combine opt list
 #   optlist["f"]                          # lookup by name
 #
 # Argument requirements:
