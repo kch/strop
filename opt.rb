@@ -248,8 +248,12 @@ module Strop
   RX_OPTS  = /#{RX_OPT}(?:, {0,2}#{RX_OPT})*/
 
   def self.parse_help(help, pad: /(?:  ){1,2}/)
-    help.scan(/^#{pad}#{RX_OPTS}/).map do |line| # get all opts
-      line.scan(RX_OPT).map do |opt|    # take each line
+    help.scan(/^#{pad}(#{RX_OPTS})(.*)/).map do |line, rest| # get all opts lines
+      # Ambiguous: --opt Desc with only one space before will interpret "Desc" as arg.
+      if rest =~ /^ \S/ && line =~ / (#{RX_SARG})$/ # desc preceeded by sringle space && last arg is " "+word. Capture arg name
+        $stderr.puts "#{$1.inspect} was interpreted as argument, In #{(line+rest).inspect}. Use at least two spaces before description to avoid this warning."
+      end
+      line.scan(RX_OPT).map do |opt|    # take options from each line
         opt.split(/(?=\[=)|=| +/, 2)    # separate flag from arg
       end.map do |flag, arg|            # remove flag markers -/--, transform arg str into requirement
         [flag.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must]
