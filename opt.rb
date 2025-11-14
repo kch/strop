@@ -167,7 +167,11 @@ module TipTopt
 
   def self.parse(optlist, argv=ARGV)
     Array === argv && argv.all?{ String === it } or raise "argv must be an array of strings (given #{argv.class})"
-    Optlist === optlist or raise "optlist must be an Optlist (given #{optlist.class})"
+    optlist = case optlist
+    when String  then parse_help(optlist)
+    when Optlist then optlist
+    else raise "optlist must be an Optlist or help text (given #{optlist.class})"
+    end
     tokens = argv.dup
     res = Result.new
     ctx = :top
