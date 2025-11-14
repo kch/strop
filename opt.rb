@@ -105,7 +105,7 @@ module TipTopt
             case opt
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
             case Arg[value:] then
-            case Sep
+            case Sep then break # if you want to handle result.rest separately
             else raise "Unhandled result #{opt}"
             end
           end
