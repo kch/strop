@@ -51,7 +51,6 @@ module Strop
 
   Arg = Data.define :value, :arg do
     def initialize(value:) = super(value:, arg: value)
-    def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
   end
 
   Opt = Data.define :decl, :name, :value, :label, :no do
@@ -62,10 +61,18 @@ module Strop
     end
     alias no? no
     def yes? = !no?
-    def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
   end
 
   Sep = :end_marker
+
+  # for debugging only, TODO remove later probably
+  class Arg
+    def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
+  end
+  class Opt
+    def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
+  end
+
 
   module Exports
     Optlist = Strop::Optlist
