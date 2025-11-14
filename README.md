@@ -10,8 +10,8 @@
 ```ruby
 opts = Optlist.from_help(help_text)  # extract from help
 result = Strop.parse(opts, ARGV)     # parse argv -> Result
-result = Strop.parse!(opts, ARGV)    # exits on error
-result = Strop.parse!(help)          # Automatically parse help text, ARGV default
+result = Strop.parse!(opts, ARGV)    # same but on error prints message and exits
+result = Strop.parse!(help_text)     # Automatically parse help text, ARGV default
 ```
 
 ## Processing parsed results
@@ -19,36 +19,35 @@ result = Strop.parse!(help)          # Automatically parse help text, ARGV defau
 ```ruby
 Strop.parse!(help).each do |item|
   case item
-  in Opt[label: "help"]                    then show_help
-  in Opt[label: "verbose", value:]         then set_verbose(value)
-  in Opt[label: "output", value: nil]      then output = :stdout
-  in Opt[label: "color"]                   then item.no? ? disable_color : enable_color
-  in Arg[value:]                           then files << value
-  in Sep                                   then break
+  in Strop::Opt[label: "help"]               then show_help
+  in Strop::Opt[label: "verbose", value:]    then set_verbose(value)
+  in Strop::Opt[label: "output", value: nil] then output = :stdout
+  in Strop::Opt[label: "color"]              then item.no? ? disable_color : enable_color
+  in Strop::Arg[value:]                      then files << value
+  in Strop::Sep                              then break
   end
 end
 ```
 
-### `parse_help` details:
-
-By default it expects options to be indented by 2 or 4 spaces. Override with:
+Or, more succinctly:
 
 ```ruby
-Strop.parse_help(text, pad: / {6}/) # 6 spaces exactly
-Strop.parse_help(text, pad: /\t/)   # tabs ????
+Strop.parse!(help).each do |item|
+  case item
+  in label: "help" then show_help     # only Opt has .label
+  in arg:          then files << arg  # `value:` might match an Opt, so Arg offters alias .arg
+  end
+end
 ```
 
-Use at least two spaces before description, and only a single space before args.
+You can generate the case expression above with:
 
+```ruby
+puts Strop::Optlist.from_help(help_text).to_s(:case)
 ```
-  --file  PATH                       # PATH seen as description and ignored, --file considered a flag (no arg)
-  --quiet Supresses output           # interpreted as --quiet=Supresses
-```
-
-The latter case is detected and a warning is printed, but best to avoid this situation altogether.
 
 
-## Parse results: Result (Array of Opt, Arg, Sep)
+## Result members (Array of Opt, Arg, Sep)
 
 ```ruby
 res.opts                             # all Opt objects
@@ -56,17 +55,23 @@ res.args                             # all Arg objects
 res.rest                             # args after -- separator
 res["flag"]                          # find opt by name
 
-Opt.decl                             # matched Optdecl
-Opt.name                             # matched name ("f" or "foo")
-Opt.value                            # argument to option
-Opt.label                            # primary display name (first long name or first name)
-Opt.no?                              # true if --no-foo variant used
-Opt.yes?                             # opposite of `no?`
-Arg.value                            # positional argument
-Sep                                  # -- end of options marker
+opt = res.opts.first
+arg = res.args.first
+opt.decl                             # Optdecl matched for this Opt instance
+opt.name                             # name used in invocation (could differ from label)
+opt.value                            # argument passed to this option
+opt.label                            # primary name (first long name or first name), used for pattern matching
+opt.no?                              # true if --no-foo variant used
+opt.yes?                             # opposite of `no?`
+arg.value                            # positional argument
+arg.arg                              # same as .value, useful for pattern matching
+Sep                                  # -- end of options marker; Const, not instantiated
 ```
 
-## Help text format for parsing 
+Notice that parsing `--[no-]flag` from help results in a single `Optdecl[:flag, :"no-flag"]`, and you can use `yes?`/`no?` to check which was passed.
+
+
+## Help text format for parsing
 
 Auto-extracts indented option lines from help:
 
@@ -81,7 +86,21 @@ Options:
   --[no]force             --force/--noforce pair
 ```
 
-`--[no-]foo` and `--[no]foo` are both supported by `parse_help`.
+By default `parse_help` expects options to be indented by 2 or 4 spaces. Override with:
+
+```ruby
+Strop.parse_help(text, pad: / {6}/)  # 6 spaces exactly
+Strop.parse_help(text, pad: /\t/)    # tabs ????
+```
+
+Use at least two spaces before description, and only a single space before args.
+
+```
+  --file  PATH                       # !! PATH seen as description and ignored, --file considered a flag (no arg)
+  --quiet Supresses output           # !! interpreted as --quiet=Supresses
+```
+
+The latter case is detected and a warning is printed, but best to avoid this situation altogether.
 
 ## Command-line parsing features
 

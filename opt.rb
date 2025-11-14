@@ -38,8 +38,8 @@ module Strop
           for item in Strop.parse!(optlist)
             case item
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
-            case Arg[value:] then
-            case Sep then break # if you want to handle result.rest separately
+            case Strop::Arg[value:] then
+            case Strop::Sep then break # if you want to handle result.rest separately
             else raise "Unhandled result \#{item}"
             end
           end
