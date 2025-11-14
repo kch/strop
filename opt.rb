@@ -14,7 +14,7 @@
 #   Optdecl[:f, :foo]                     # multiple names: -f or --foo
 #   Optdecl[:f, :foo, arg: :may]          # explicit arg form: --foo [ARG]
 #
-#   Single char opts: short flag -f, otherwise --flag
+#   Single char opts: short opt -f, otherwise --long
 #
 #   Use explicit form if you want to use ?/! in option name:
 #   Optdecl[:?, arg: :shant]              # allows -? option
@@ -177,7 +177,7 @@ module Strop
     tokens = argv.dup
     res = Result.new
     ctx = :top
-    flag, token, opt = nil
+    name, token, opt = nil
     rx_value = /\A[^-]|\A\z/
     loop do
       case ctx
@@ -195,34 +195,34 @@ module Strop
         end
 
       when :long
-        flag, value = token =~ /\A(.*?)=/m ? [$1, $'] : [token, nil]
-        opt = optlist[flag] or raise OptionError, "Unknown option: --#{flag}"
+        name, value = token =~ /\A(.*?)=/m ? [$1, $'] : [token, nil]
+        opt = optlist[name] or raise OptionError, "Unknown option: --#{name}"
         case
-        when  opt.arg? &&  value then ctx = :top; res << Opt[opt, flag, value]    # --foo=XXX
-        when !opt.arg? && !value then ctx = :top; res << Opt[opt, flag]           # --foo
+        when  opt.arg? &&  value then ctx = :top; res << Opt[opt, name, value]    # --foo=XXX
+        when !opt.arg? && !value then ctx = :top; res << Opt[opt, name]           # --foo
         when  opt.arg? && !value then ctx = :arg                                  # --foo XXX
-        when !opt.arg? &&  value then raise OptionError, "Option --#{flag} takes no argument"
+        when !opt.arg? &&  value then raise OptionError, "Option --#{name} takes no argument"
         else raise Unreachable
         end
 
       when :short
-        flag, token = token[0], token[1..].then{ it != "" ? it : nil }            # -abc -> a, bc
-        opt = optlist[flag] or raise OptionError, "Unknown option: -#{flag}"
+        name, token = token[0], token[1..].then{ it != "" ? it : nil }            # -abc -> a, bc
+        opt = optlist[name] or raise OptionError, "Unknown option: -#{name}"
         case
-        when  opt.arg? &&  token then ctx = :top; res << Opt[opt, flag, token]    # -aXXX
-        when !opt.arg? && !token then ctx = :top; res << Opt[opt, flag]           # end of -abc
+        when  opt.arg? &&  token then ctx = :top; res << Opt[opt, name, token]    # -aXXX
+        when !opt.arg? && !token then ctx = :top; res << Opt[opt, name]           # end of -abc
         when  opt.arg? && !token then ctx = :arg                                  # -a XXX
-        when !opt.arg? &&  token then res << Opt[opt, flag]                       # -abc -> took -a, will parse -bc
+        when !opt.arg? &&  token then res << Opt[opt, name]                       # -abc -> took -a, will parse -bc
         else raise Unreachable
         end
 
       when :arg
         token = tokens[0]&.=~(rx_value) ? tokens.shift : nil
         case
-        when opt.arg! && !token then raise OptionError, "Expected argument for option -#{?- if flag[1]}#{flag}" # --req missing value; (!peek implied)
-        when opt.arg! &&  token then ctx = :top; res << Opt[opt, flag, token]     # --req val
-        when opt.arg? &&  token then ctx = :top; res << Opt[opt, flag, token]     # --opt val
-        when opt.arg? && !token then ctx = :top; res << Opt[opt, flag]            # --opt followed by --foo, --opt as last token
+        when opt.arg! && !token then raise OptionError, "Expected argument for option -#{?- if name[1]}#{name}" # --req missing value
+        when opt.arg! &&  token then ctx = :top; res << Opt[opt, name, token]     # --req val
+        when opt.arg? &&  token then ctx = :top; res << Opt[opt, name, token]     # --opt val
+        when opt.arg? && !token then ctx = :top; res << Opt[opt, name]            # --opt followed by --foo, --opt as last token
         else raise Unreachable
         end
 
@@ -256,18 +256,18 @@ module Strop
         $stderr.puts "#{$1.inspect} was interpreted as argument, In #{(line+rest).inspect}. Use at least two spaces before description to avoid this warning."
       end
       line.scan(RX_OPT).map do |opt|    # take options from each line
-        opt.split(/(?=\[=)|=| +/, 2)    # separate flag from arg
-      end.map do |flag, arg|            # remove flag markers -/--, transform arg str into requirement
-        [flag.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must]
-      end.transpose           # [[flag,arg], ...] -> [flags, args]
-      .then do |flags, args|  # hanfle -f,--foo=x style, without arg on short flag, and expand --[no]flag into --flag and --noflag (also --[no-])
-        args = args.uniq.tap{ it.delete :shant if it.size > 1 }                            # delete excess :shant (from -f in -f,--foo=x)
-        raise "flag #{flags} has conflicting arg requirements: #{args}" if args.size > 1   # raise if still conflict, like -f X, --ff [X]
-        [(flags.flat_map{|f| f.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : f }).uniq, args[0]] # [flags and noflags, resolved single arg]
+        opt.split(/(?=\[=)|=| +/, 2)    # separate name from arg
+      end.map do |name, arg|            # remove opt markers -/--, transform arg str into requirement
+        [name.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must]
+      end.transpose           # [[name,arg], ...] -> [names, args]
+      .then do |names, args|  # hanfle -f,--foo=x style (without arg on short opt); expand --[no]flag into --flag and --noflag (also --[no-])
+        args = args.uniq.tap{ it.delete :shant if it.size > 1 }                                  # delete excess :shant (from -f in -f,--foo=x)
+        raise "Option #{names} has conflicting arg requirements: #{args}" if args.size > 1       # raise if still conflict, like -f X, --ff [X]
+        [(names.flat_map{|f| f.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : f }).uniq, args[0]]  # [flags and noflags, resolved single arg]
       end
-    end.uniq.tap do |list| # [[[flag, flag, ...], arg, more opts ...]
+    end.uniq.tap do |list| # [[[name, name, ...], arg, more opts ...]
       dupes = list.flat_map(&:first).tally.reject{|k,v|v==1}
-      raise "Flags #{dupes.keys.inspect} seen more than once in distinct definitions" if dupes.any?
+      raise "Options #{dupes.keys.inspect} seen more than once in distinct definitions" if dupes.any?
     end.map{ |names, arg| Optdecl[*names, arg:] }.then{ Optlist[*it] }
   end
 
