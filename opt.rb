@@ -21,7 +21,7 @@ module Strop
     def no?  = names.each_cons(2).any?{|a,b| b =~ /\Ano-?#{Regexp.escape a}\z/ } # is a flag like --[no-]foo, --[no]bar
     def arg? = self.arg != :shant # accepts arg
     def arg! = self.arg == :must  # requires arg
-    def to_s = names.map{ (it[1] ? "--" : "-")<<it }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
+    def to_s = names.map{ (it[1] ? "--" : "-")+it }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
   end
 
   class Optlist < Array # a list of Optdecls
