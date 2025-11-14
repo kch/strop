@@ -132,11 +132,12 @@ module Strop
 
   Opt = Data.define :decl, :name, :value, :label, :no do
     def initialize(decl:, name:, value: nil)
-      label = decl.label # repeated here so can be pattern-matched against
-      no = name =~ /\Ano-?/ && decl.names.member?($')
+      label = decl.label                              # repeated here so can be pattern-matched against in case/in
+      no = name =~ /\Ano-?/ && decl.names.member?($') # flag given in negated version: (given --no-foo and also accepts --foo)
       super(decl:, name:, value:, label:, no: !!no)
     end
     alias no? no
+    def yes? = !no?
     def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
   end
 
