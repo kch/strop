@@ -78,8 +78,8 @@ module TipTopt
     def initialize(names:, arg: nil)
       names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it }
       names[0] = names[0].sub(/[!?]$/, "") unless arg
-      label = names.find{ it.size > 1 } || names.first # the canonical name
       arg ||= { ?? => :may, ?! => :must }[$&] || :shant
+      label = names.find{ it.size > 1 } || names.first # the canonical name
       %i[must may shant].member? arg or raise "invalid arg"
       super names:, arg:, label:
     end
