@@ -93,6 +93,7 @@ module Strop
   def self.parse(optlist, argv=ARGV)
     Array === argv && argv.all?{ String === it } or raise "argv must be an array of strings (given #{argv.class})"
     optlist = case optlist
+    when IO      then parse_help(optlist.read)
     when String  then parse_help(optlist)
     when Optlist then optlist
     else raise "optlist must be an Optlist or help text (given #{optlist.class})"
