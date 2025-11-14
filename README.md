@@ -4,6 +4,7 @@
 
 - Build options from parsing help text, instead of the other way around
 - Pattern matching for result processing (with `case`/`in …`)
+- Short, single-file implementation: easy to read and modify
 
 ## Core workflow
 
@@ -14,7 +15,7 @@ Options:
   -v, --verbose LEVEL     Required arg
   -o, --output [FILE]     Optional arg
 HELP
-opts = Optlist.from_help(help_text)  # extract from help
+opts = Strop.parse_help(help_text)   # extract from help
 result = Strop.parse(opts, ARGV)     # parse argv -> Result
 result = Strop.parse!(opts, ARGV)    # same but on error prints message and exits
 result = Strop.parse!(help_text)     # Automatically parse help text, ARGV default
@@ -42,6 +43,7 @@ Strop.parse!(help).each do |item|
   case item
   in label: "help" then show_help     # only Opt has .label
   in arg:          then files << arg  # `value:` might match an Opt, so Arg offers alias .arg
+  in Strop::Sep    then               # same. leave blank to keep looping, but exhaust the case
   end
 end
 ```
@@ -49,7 +51,7 @@ end
 You can generate the case expression above with:
 
 ```ruby
-puts Strop::Optlist.from_help(help_text).to_s(:case)
+puts Strop.parse_help(help_text).to_s(:case)
 ```
 
 
@@ -121,6 +123,7 @@ cmd --intermixed args and --options   # flexible ordering
 ## Manual option declaration building
 
 ```ruby
+include Strop::Exports                # For brevity in exanples. Not required.
 Optdecl[:f]                           # flag only: -f
 Optdecl[:f?]                          # optional arg: -f [X]
 Optdecl[:f!]                          # required arg: -f x
