@@ -34,7 +34,7 @@ module Strop
         caseins = map{|os| "in label: #{os.label.inspect}".tap{ it << ", value:" if os.arg? }}
         len = caseins.map(&:size).max
         caseins = caseins.zip(self).map{ |s,o| s.ljust(len) + " then#{' opt.no?' if o.no?} # #{o}" }
-        puts <<~RUBY
+        <<~RUBY
           for item in Strop.parse!(optlist)
             case item
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
