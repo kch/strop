@@ -40,7 +40,7 @@ module Strop
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
             case Arg[value:] then
             case Sep then break # if you want to handle result.rest separately
-            else raise "Unhandled result #{item}"
+            else raise "Unhandled result \#{item}"
             end
           end
         RUBY
