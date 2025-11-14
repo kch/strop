@@ -87,17 +87,17 @@ module Strop
 
   Optdecl = Data.define(:names, :arg, :label) do
     def initialize(names:, arg: nil)
-      names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it }
-      names[0] = names[0].sub(/[!?]$/, "") unless arg
-      arg ||= { ?? => :may, ?! => :must }[$&] || :shant
-      label = names.find{ it.size > 1 } || names.first # the canonical name
-      %i[must may shant].member? arg or raise "invalid arg"
+      names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it } # :foo_bar to "foo-bar" for symbols
+      names[0] = names[0].sub(/[!?]$/, "") unless arg                   # opt? / opt! to opt, and... (unless arg given)
+      arg ||= { ?? => :may, ?! => :must }[$&] || :shant                 # use ?/! to determine arg (unless arg given)
+      label = names.find{ it.size > 1 } || names.first                  # the canonical name used to search for it
+      %i[must may shant].member? arg or raise "invalid arg"             # validate arg
       super names:, arg:, label:
     end
 
-    def no?  = names.each_cons(2).any?{|a,b| b =~ /\Ano-?#{Regexp.escape a}\z/ }
-    def arg? = self.arg != :shant
-    def arg! = self.arg == :must
+    def no?  = names.each_cons(2).any?{|a,b| b =~ /\Ano-?#{Regexp.escape a}\z/ } # is a flag like --[no-]foo, --[no]bar
+    def arg? = self.arg != :shant # accepts arg
+    def arg! = self.arg == :must  # requires arg
     def to_s = names.map{ (it[1] ? "--" : "-")<<it }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
   end
 
