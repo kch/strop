@@ -112,7 +112,7 @@ module TipTopt
         len = caseins.map(&:size).max
         caseins = caseins.zip(self).map{ |s,o| s.ljust(len) + " then#{' opt.no?' if o.no?} # #{o}" }
         puts <<~RUBY
-          for opt in result
+          for opt in Tiptopt.parse!(optlist)
             case opt
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
             case Arg[value:] then
