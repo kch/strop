@@ -1,9 +1,7 @@
-#!/usr/bin/env ruby
+# frozen_string_literal: true
 
-# require "yaml"
-# require "psych/y"
-# require "debug"
-# DEBUGGER__.add_catch_breakpoint "Exception"
+# require "debug"; DEBUGGER__.add_catch_breakpoint "Exception"
+require_relative "strop/version"
 
 module Strop
 

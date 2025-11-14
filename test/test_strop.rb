@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require "minitest/autorun"
-require_relative "opt"
+require_relative "../lib/strop"
 
 class TestOpt < Minitest::Test
   include Strop::Exports
