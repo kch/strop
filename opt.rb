@@ -4,8 +4,8 @@
 #
 # Core workflow:
 #   opts = Optlist.from_help(help_text)  # extract from help
-#   args = parse(ARGV, opts)             # parse argv -> Result
-#   args = parse!(ARGV, opts)            # exits on error
+#   args = parse(opts, ARGV)             # parse argv -> Result
+#   args = parse!(opts, ARGV)            # exits on error
 #
 # Manual option declaration building:
 #   Optdecl[:f]                           # flag only: -f
@@ -165,7 +165,7 @@ module TipTopt
   class Unreachable < RuntimeError; end
   class OptionError < ArgumentError; end
 
-  def self.parse(argv, optlist)
+  def self.parse(optlist, argv=ARGV)
     Array === argv && argv.all?{ String === it } or raise "argv must be an array of strings (given #{argv.class})"
     Optlist === optlist or raise "optlist must be an Optlist (given #{optlist.class})"
     tokens = argv.dup

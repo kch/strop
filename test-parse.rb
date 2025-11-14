@@ -47,14 +47,14 @@ tests = [
   ].map {|a,b,c| [a, b.map{ it.split(?=, 2) },c] }
   .each do |argv, ropts, rargs|
     puts "check: " + argv.inspect
-    opts, args = TipTopt.parse(argv, optlist).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
+    opts, args = TipTopt.parse(optlist, argv).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
     rargs == args.map{it.value} or raise
     ropts == opts.map{ [it.name, it.value].compact } or raise
   end
 
 fails = %w[ --err  ---  --=  --not=1  -a1  --a=1 -z -az -c --req ]
 fails.each do |argv|
-  TipTopt.parse([argv], optlist)
+  TipTopt.parse(optlist, [argv])
   raise "Should fail: #{argv}"
 rescue TipTopt::OptionError
 end
@@ -63,7 +63,7 @@ end
 # exit
 
 test = tests.sample[0]
-parsed = TipTopt.parse!(test, optlist)
+parsed = TipTopt.parse!(optlist, test)
 p test
 y parsed
 puts "=="

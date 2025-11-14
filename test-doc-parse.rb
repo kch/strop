@@ -29,7 +29,7 @@ puts "call me with --help or try --bar / --no-bar" if ARGV.empty?
 include TipTopt
 optlist = Optlist.from_help HELP
 # puts optlist.to_s
-res = TipTopt::parse!(ARGV, optlist)
+res = TipTopt::parse!(optlist, ARGV)
 o,a,rest = res.opts, res.args, res.rest
 y res
 y o
