@@ -51,6 +51,7 @@ module Strop
 
   Arg = Data.define :value, :arg do
     def initialize(value:) = super(value:, arg: value)
+    alias to_s value
   end
 
   Opt = Data.define :decl, :name, :value, :label, :no do
