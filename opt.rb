@@ -49,7 +49,8 @@ module Strop
   end
 
 
-  Arg = Data.define :value do
+  Arg = Data.define :value, :arg do
+    def initialize(value:) = super(value:, arg: value)
     def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
   end
 

@@ -75,7 +75,8 @@ parsed.each do |opt|
   in Opt[label: "req"] then puts opt.value+" IS REQ"
   in Opt[value: nil]   then puts "#{opt.label}!"
   in Opt               then puts "#{opt.label}=#{opt.value}"
-  in Arg               then p opt.value
+  in arg:              then p "P ARG VALUE: #{arg}"
+  # in Arg               then p opt.value
   else puts "??"
   end
 end
