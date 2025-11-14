@@ -404,7 +404,7 @@ class TestOpt < Minitest::Test
       help = <<~HELP
         Options:
           --file  PATH
-          --quiet Supresses output
+          --quiet Suppresses output
       HELP
 
       optlist = Strop.parse_help(help)
@@ -413,12 +413,12 @@ class TestOpt < Minitest::Test
       file_opt = optlist["file"]           # PATH seen as description, --file is flag
       assert_equal :shant, file_opt.arg
 
-      quiet_opt = optlist["quiet"]         # Supresses interpreted as arg
+      quiet_opt = optlist["quiet"]         # Suppresses interpreted as arg
       assert_equal :must, quiet_opt.arg
 
       # Check warning was printed for the ambiguous case
       assert_match(/interpreted as argument/, $stderr.string)
-      assert_match(/Supresses/, $stderr.string)
+      assert_match(/Suppresses/, $stderr.string)
     ensure
       $stderr = original_stderr
     end

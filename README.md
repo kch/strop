@@ -97,7 +97,7 @@ Use at least two spaces before description, and only a single space before args.
 
 ```
   --file  PATH                       # !! PATH seen as description and ignored, --file considered a flag (no arg)
-  --quiet Supresses output           # !! interpreted as --quiet=Supresses
+  --quiet Suppresses output          # !! interpreted as --quiet=Suppresses
 ```
 
 The latter case is detected and a warning is printed, but best to avoid this situation altogether.
