@@ -170,15 +170,15 @@ module Strop
   end
 
 
-  RX_SOARG = /\[\S+?\]/
-  RX_SARG  = /[^\s,]+/
-  RX_LOARG = /\[=\S+?\]| #{RX_SOARG}/
-  RX_LARG  = /[ =]#{RX_SARG}/
-  RX_NO    = /\[no-?\]/
-  RX_SOPT  = /-[^-\s,](?: (?:#{RX_SOARG}|#{RX_SARG}))?/
-  RX_LOPT  = /--(?=[^-=,\s])#{RX_NO}?[^\s=,\[]+(?:#{RX_LOARG}|#{RX_LARG})?/
-  RX_OPT   = /#{RX_SOPT}|#{RX_LOPT}/
-  RX_OPTS  = /#{RX_OPT}(?:, {0,2}#{RX_OPT})*/
+  RX_SOARG = /\[\S+?\]/                        # short opt optional arg
+  RX_SARG  = /[^\s,]+/                         # short opt required arg
+  RX_LOARG = /\[=\S+?\]| #{RX_SOARG}/          # long opt optional arg: --foo[=bar] or --foo [bar]
+  RX_LARG  = /[ =]#{RX_SARG}/                  # long opt required arg: --foo=bar or --foo bar
+  RX_NO    = /\[no-?\]/                        # prefix for --[no-]flags
+  RX_SOPT  = /-[^-\s,](?: (?:#{RX_SOARG}|#{RX_SARG}))?/                      # full short opt
+  RX_LOPT  = /--(?=[^-=,\s])#{RX_NO}?[^\s=,\[]+(?:#{RX_LOARG}|#{RX_LARG})?/  # full long opt
+  RX_OPT   = /#{RX_SOPT}|#{RX_LOPT}/           # either opt
+  RX_OPTS  = /#{RX_OPT}(?:, {0,2}#{RX_OPT})*/  # list of opts, comma separated
 
   def self.parse_help(help, pad: /(?:  ){1,2}/)
     help.scan(/^#{pad}(#{RX_OPTS})(.*)/).map do |line, rest| # get all opts lines
@@ -191,7 +191,7 @@ module Strop
       end.map do |name, arg|            # remove opt markers -/--, transform arg str into requirement
         [name.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must]
       end.transpose           # [[name,arg], ...] -> [names, args]
-      .then do |names, args|  # hanfle -f,--foo=x style (without arg on short opt); expand --[no]flag into --flag and --noflag (also --[no-])
+      .then do |names, args|  # handle -f,--foo=x style (without arg on short opt); expand --[no]flag into --flag and --noflag (also --[no-])
         args = args.uniq.tap{ it.delete :shant if it.size > 1 }                                  # delete excess :shant (from -f in -f,--foo=x)
         raise "Option #{names} has conflicting arg requirements: #{args}" if args.size > 1       # raise if still conflict, like -f X, --ff [X]
         [(names.flat_map{|f| f.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : f }).uniq, args[0]]  # [flags and noflags, resolved single arg]
