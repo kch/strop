@@ -4,7 +4,7 @@ require_relative "opt"
 require "yaml"
 require "psych/y"
 
-include TipTopt::Exports
+include Strop::Exports
 
 optlist = Optlist[
   Optdecl[:d],
@@ -47,23 +47,23 @@ tests = [
   ].map {|a,b,c| [a, b.map{ it.split(?=, 2) },c] }
   .each do |argv, ropts, rargs|
     puts "check: " + argv.inspect
-    opts, args = TipTopt.parse(optlist, argv).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
+    opts, args = Strop.parse(optlist, argv).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
     rargs == args.map{it.value} or raise
     ropts == opts.map{ [it.name, it.value].compact } or raise
   end
 
 fails = %w[ --err  ---  --=  --not=1  -a1  --a=1 -z -az -c --req ]
 fails.each do |argv|
-  TipTopt.parse(optlist, [argv])
+  Strop.parse(optlist, [argv])
   raise "Should fail: #{argv}"
-rescue TipTopt::OptionError
+rescue Strop::OptionError
 end
 
 
 # exit
 
 test = tests.sample[0]
-parsed = TipTopt.parse!(optlist, test)
+parsed = Strop.parse!(optlist, test)
 p test
 y parsed
 puts "=="

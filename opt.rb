@@ -83,7 +83,7 @@
 # require "debug"
 # DEBUGGER__.add_catch_breakpoint "Exception"
 
-module TipTopt
+module Strop
 
   Optdecl = Data.define(:names, :arg, :label) do
     def initialize(names:, arg: nil)
@@ -102,7 +102,7 @@ module TipTopt
   end
 
   class Optlist < Array # a list of Optdecls
-    def self.from_help(doc) = TipTopt.parse_help(doc)
+    def self.from_help(doc) = Strop.parse_help(doc)
     def [](k, ...) = [String, Symbol].any?{ it === k } ? self.find{ it.names.member? k.to_s } : super(k, ...)
     def to_s(as=:plain)
       case as
@@ -112,7 +112,7 @@ module TipTopt
         len = caseins.map(&:size).max
         caseins = caseins.zip(self).map{ |s,o| s.ljust(len) + " then#{' opt.no?' if o.no?} # #{o}" }
         puts <<~RUBY
-          for opt in Tiptopt.parse!(optlist)
+          for opt in Strop.parse!(optlist)
             case opt
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
             case Arg[value:] then
@@ -143,11 +143,11 @@ module TipTopt
   Sep = :end_marker
 
   module Exports
-    Optlist = TipTopt::Optlist
-    Optdecl = TipTopt::Optdecl
-    Opt     = TipTopt::Opt
-    Arg     = TipTopt::Arg
-    Sep     = TipTopt::Sep
+    Optlist = Strop::Optlist
+    Optdecl = Strop::Optdecl
+    Opt     = Strop::Opt
+    Arg     = Strop::Arg
+    Sep     = Strop::Sep
   end
 
   class Result < Array # of Opt, Arg, Sep
