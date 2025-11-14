@@ -17,6 +17,7 @@ optlist = Optlist[
   Optdecl[:req!],
   Optdecl[:foo_bar],
   Optdecl["foo_bar"],
+  Optdecl[:zz,:qq, arg: :shant],
 ]
 
 tests = [
@@ -27,6 +28,7 @@ tests = [
   [%w[ a -- b ],                       %w[], %w[ a b ]],
   [%w[ a -- -z -w -- ],                %w[], %w[ a -z -w -- ]],
   [%w[ -a ],                           %w[ a ], %w[]],
+  [%w[ --zz --qq ],                    %w[ zz qq ], %w[]],
   [%w[ -a -- -z -w ],                  %w[ a ], %w[ -z -w ]],
   [%w[ -a b -- -z -w ],                %w[ a ], %w[ b -z -w ]],
   [%w[ -a b c w z ],                   %w[ a ], %w[ b c w z ]],

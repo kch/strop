@@ -11,8 +11,8 @@
 #   Optdecl[:f]                           # flag only: -f
 #   Optdecl[:f?]                          # optional arg: -f [X]
 #   Optdecl[:f!]                          # required arg: -f x
-#   Optdecl[[:f, :foo]]                   # multiple names: -f or --foo
-#   Optdecl[names: [:f, :foo], arg: :may] # explicit arg form
+#   Optdecl[:f, :foo]                     # multiple names: -f or --foo
+#   Optdecl[:f, :foo, arg: :may]          # explicit arg form: --foo [ARG]
 #
 #   Single char opts: short flag -f, otherwise --flag
 #
@@ -86,6 +86,7 @@
 module Strop
 
   Optdecl = Data.define(:names, :arg, :label) do
+    def self.[](*names, arg: nil) = new(names:, arg:)
     def initialize(names:, arg: nil)
       names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it } # :foo_bar to "foo-bar" for symbols
       names[0] = names[0].sub(/[!?]$/, "") unless arg                   # opt? / opt! to opt, and... (unless arg given)
@@ -267,7 +268,7 @@ module Strop
     end.uniq.tap do |list| # [[[flag, flag, ...], arg, more opts ...]
       dupes = list.flat_map(&:first).tally.reject{|k,v|v==1}
       raise "Flags #{dupes.keys.inspect} seen more than once in distinct definitions" if dupes.any?
-    end.map{ Optdecl[*it] }.then{ Optlist[*it] }
+    end.map{ |names, arg| Optdecl[*names, arg:] }.then{ Optlist[*it] }
   end
 
 
