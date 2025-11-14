@@ -3,19 +3,19 @@
 # Command-line option parser
 #
 # Core workflow:
-#   spec = Optspec.from_help(help_text)  # extract from help
+#   spec = Optlist.from_help(help_text)  # extract from help
 #   args = parse(ARGV, spec)             # parse argv -> Result
 #   args = parse!(ARGV, spec)            # exits on error
 #
 # Manual spec building:
-#   Optdef[:f]                           # flag only
-#   Optdef[:f?]                          # optional arg
-#   Optdef[:f!]                          # required arg
-#   Optdef[[:f, :foo]]                   # multiple names
-#   Optdef[names: [:f, :foo], arg: :may] # explicit form
+#   Optdecl[:f]                           # flag only
+#   Optdecl[:f?]                          # optional arg
+#   Optdecl[:f!]                          # required arg
+#   Optdecl[[:f, :foo]]                   # multiple names
+#   Optdecl[names: [:f, :foo], arg: :may] # explicit form
 #
-#   optspec = Optspec[optdef1, optdef2]  # combine into spec
-#   optspec["f"]                         # lookup by name
+#   optlist = Optlist[optdecl1, optdecl2] # combine into spec
+#   optlist["f"]                          # lookup by name
 #
 # Argument requirements:
 #   :shant - no argument allowed
@@ -27,7 +27,7 @@
 #   res.args                             # all Arg objects
 #   res.rest                             # args after -- separator
 #
-#   Opt.optdef                           # matched Optdef
+#   Opt.decl                             # matched Optdecl
 #   Opt.name                             # matched name ("f" or "foo")
 #   Opt.value                            # "bar" or nil
 #   Opt.label                            # primary display name
@@ -74,7 +74,7 @@
 
 module TipTopt
 
-  Optdef = Data.define(:names, :arg, :label) do
+  Optdecl = Data.define(:names, :arg, :label) do
     def initialize(names:, arg: nil)
       names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it }
       names[0] = names[0].sub(/[!?]$/, "") unless arg
@@ -90,7 +90,7 @@ module TipTopt
     def to_s = names.map{ (it[1] ? "--" : "-")<<it }.join(", ") + { must: " X", may: " [X]", shant: "" }[arg]
   end
 
-  class Optspec < Array # a list of Optdefs
+  class Optlist < Array # a list of Optdecls
     def self.from_help(doc) = TipTopt.parse_help(doc)
     def [](k, ...) = [String, Symbol].any?{ it === k } ? self.find{ it.names.member? k.to_s } : super(k, ...)
     def to_s(as=:plain)
@@ -104,6 +104,9 @@ module TipTopt
           for opt in result
             case opt
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
+            case Arg[value:] then
+            case Sep
+            else raise "Unhandled result #{opt}"
             end
           end
         RUBY
@@ -116,11 +119,11 @@ module TipTopt
     def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
   end
 
-  Opt = Data.define :optdef, :name, :value, :label, :no do
-    def initialize(optdef:, name:, value: nil)
-      label = optdef.label # repeated here to can be pattern-matched against
-      no = name =~ /\Ano-?/ && optdef.names.member?($')
-      super(optdef:, name:, value:, label:, no: !!no)
+  Opt = Data.define :decl, :name, :value, :label, :no do
+    def initialize(decl:, name:, value: nil)
+      label = decl.label # repeated here so can be pattern-matched against
+      no = name =~ /\Ano-?/ && decl.names.member?($')
+      super(decl:, name:, value:, label:, no: !!no)
     end
     alias no? no
     def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
@@ -129,8 +132,8 @@ module TipTopt
   Sep = :end_marker
 
   module Exports
-    Optspec = TipTopt::Optspec
-    Optdef  = TipTopt::Optdef
+    Optlist = TipTopt::Optlist
+    Optdecl = TipTopt::Optdecl
     Opt     = TipTopt::Opt
     Arg     = TipTopt::Arg
     Sep     = TipTopt::Sep
@@ -142,7 +145,7 @@ module TipTopt
     def opts = Result.new(select { Opt === it })
     def [](k, ...)
       case k
-      when String, Symbol then find{ Opt === it && it.optdef.names.member?(k.to_s) }
+      when String, Symbol then find{ Opt === it && it.decl.names.member?(k.to_s) }
       else super(k, ...)
       end
     end
@@ -151,9 +154,9 @@ module TipTopt
   class Unreachable < RuntimeError; end
   class OptionError < ArgumentError; end
 
-  def self.parse(argv, optspec)
+  def self.parse(argv, optlist)
     Array === argv && argv.all?{ String === it } or raise "argv must be an array of strings (given #{argv.class})"
-    Optspec === optspec or raise "optspec must be an Optspec (given #{optspec.class})"
+    Optlist === optlist or raise "optlist must be an Optlist (given #{optlist.class})"
     tokens = argv.dup
     res = Result.new
     ctx = :top
@@ -176,7 +179,7 @@ module TipTopt
 
       when :long
         flag, value = token =~ /\A(.*?)=/m ? [$1, $'] : [token, nil]
-        opt = optspec[flag] or raise OptionError, "Unknown option: --#{flag}"
+        opt = optlist[flag] or raise OptionError, "Unknown option: --#{flag}"
         case
         when  opt.arg? &&  value then ctx = :top; res << Opt[opt, flag, value]    # --foo=XXX
         when !opt.arg? && !value then ctx = :top; res << Opt[opt, flag]           # --foo
@@ -187,7 +190,7 @@ module TipTopt
 
       when :short
         flag, token = token[0], token[1..].then{ it != "" ? it : nil }            # -abc -> a, bc
-        opt = optspec[flag] or raise OptionError, "Unknown option: -#{flag}"
+        opt = optlist[flag] or raise OptionError, "Unknown option: -#{flag}"
         case
         when  opt.arg? &&  token then ctx = :top; res << Opt[opt, flag, token]    # -aXXX
         when !opt.arg? && !token then ctx = :top; res << Opt[opt, flag]           # end of -abc
@@ -244,7 +247,7 @@ module TipTopt
     end.uniq.tap do |list| # [[[flag, flag, ...], arg, more opts ...]
       dupes = list.flat_map(&:first).tally.reject{|k,v|v==1}
       raise "Flags #{dupes.keys.inspect} seen more than once in distinct definitions" if dupes.any?
-    end.map{ Optdef[*it] }.then{ Optspec[*it] }
+    end.map{ Optdecl[*it] }.then{ Optlist[*it] }
   end
 
 

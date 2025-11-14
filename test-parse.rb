@@ -6,17 +6,17 @@ require "psych/y"
 
 include TipTopt::Exports
 
-optspec = Optspec[
-  Optdef[:d],
-  Optdef[:e],
-  Optdef[:a],
-  Optdef[:b?],
-  Optdef[:c!],
-  Optdef[:not],
-  Optdef[:opt?],
-  Optdef[:req!],
-  Optdef[:foo_bar],
-  Optdef["foo_bar"],
+optlist = Optlist[
+  Optdecl[:d],
+  Optdecl[:e],
+  Optdecl[:a],
+  Optdecl[:b?],
+  Optdecl[:c!],
+  Optdecl[:not],
+  Optdecl[:opt?],
+  Optdecl[:req!],
+  Optdecl[:foo_bar],
+  Optdecl["foo_bar"],
 ]
 
 tests = [
@@ -47,14 +47,14 @@ tests = [
   ].map {|a,b,c| [a, b.map{ it.split(?=, 2) },c] }
   .each do |argv, ropts, rargs|
     puts "check: " + argv.inspect
-    opts, args = TipTopt.parse(argv, optspec).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
+    opts, args = TipTopt.parse(argv, optlist).group_by{it.class}.tap{it.default=[]}.values_at(Opt, Arg)
     rargs == args.map{it.value} or raise
     ropts == opts.map{ [it.name, it.value].compact } or raise
   end
 
 fails = %w[ --err  ---  --=  --not=1  -a1  --a=1 -z -az -c --req ]
 fails.each do |argv|
-  TipTopt.parse([argv], optspec)
+  TipTopt.parse([argv], optlist)
   raise "Should fail: #{argv}"
 rescue TipTopt::OptionError
 end
@@ -63,7 +63,7 @@ end
 # exit
 
 test = tests.sample[0]
-parsed = TipTopt.parse!(test, optspec)
+parsed = TipTopt.parse!(test, optlist)
 p test
 y parsed
 puts "=="
