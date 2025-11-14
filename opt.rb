@@ -4,8 +4,9 @@
 #
 # Core workflow:
 #   opts = Optlist.from_help(help_text)  # extract from help
-#   args = parse(opts, ARGV)             # parse argv -> Result
-#   args = parse!(opts, ARGV)            # exits on error
+#   result = Strop.parse(opts, ARGV)     # parse argv -> Result
+#   result = Strop.parse!(opts, ARGV)    # exits on error
+#   result = Strop.parse!(help)          # Automatically parse help text, ARGV default
 #
 # Manual option declaration building:
 #   Optdecl[:f]                           # flag only: -f
@@ -37,6 +38,7 @@
 #   res.opts                             # all Opt objects
 #   res.args                             # all Arg objects
 #   res.rest                             # args after -- separator
+#   res["flag"]                          # find opt by name
 #
 #   Opt.decl                             # matched Optdecl
 #   Opt.name                             # matched name ("f" or "foo")
@@ -55,7 +57,7 @@
 #     in Opt[label: "help"]                    then show_help
 #     in Opt[label: "verbose", value:]         then set_verbose(value)
 #     in Opt[label: "output", value: nil]      then output = :stdout
-#     in Opt[label: "color"]                   then opt.no? ? disable_color : enable_color
+#     in Opt[label: "color"]                   then item.no? ? disable_color : enable_color
 #     in Arg[value:]                           then files << value
 #     in Sep                                   then break
 #     end
@@ -113,12 +115,12 @@ module Strop
         len = caseins.map(&:size).max
         caseins = caseins.zip(self).map{ |s,o| s.ljust(len) + " then#{' opt.no?' if o.no?} # #{o}" }
         puts <<~RUBY
-          for opt in Strop.parse!(optlist)
-            case opt
+          for item in Strop.parse!(optlist)
+            case item
             #{caseins.map{ "  #{it}" }.join("\n").lstrip}
             case Arg[value:] then
             case Sep then break # if you want to handle result.rest separately
-            else raise "Unhandled result #{opt}"
+            else raise "Unhandled result #{item}"
             end
           end
         RUBY
