@@ -92,11 +92,12 @@ module Strop
 
   # Convenience. Include if you don't wanna Strop:: everywhere.
   module Exports
-    Optlist = Strop::Optlist
-    Optdecl = Strop::Optdecl
-    Opt     = Strop::Opt
-    Arg     = Strop::Arg
-    Sep     = Strop::Sep
+    Optlist     = Optlist
+    Optdecl     = Optdecl
+    Opt         = Opt
+    Arg         = Arg
+    Sep         = Sep
+    OptionError = OptionError
   end
 
   # for debugging only, TODO remove later probably
