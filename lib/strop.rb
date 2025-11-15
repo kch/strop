@@ -105,7 +105,6 @@ module Strop
     end
   end
 
-  class Unreachable < RuntimeError; end  # Must never happen
   class OptionError < ArgumentError; end # Raised during parse, with error msgs
 
   # Parse command line arguments array against option declarations. Defaults to parsing ARGV
@@ -122,55 +121,50 @@ module Strop
     res = Result.new
     ctx = :top
     name, token, opt = nil
-    rx_value = /\A[^-]|\A\z/
+    rx_value = /\A[^-]|\A\z/ # not an opt
     loop do
       case ctx
-      when :end then return res.concat tokens.map{ Arg[it] } # opt parsing ended, rest is positional args
-      when :value then ctx = :top; res << Arg[token]         # interspersed positional arg amidst opts
+      in :end then return res.concat tokens.map{ Arg[it] } # opt parsing ended, rest is positional args
+      in :value then ctx = :top; res << Arg[token]         # interspersed positional arg amidst opts
 
-      when :top
-        token = tokens.shift or next ctx = :end                                   # next token or done
+      in :top
+        token = tokens.shift or next ctx = :end                           # next token or done
         case token
-        when "--"          then ctx = :end; res << Sep                            # end of options
-        when /\A--(.+)\z/m then token, ctx = $1, :long                            # long (--foo, --foo xxx), long with attached value (--foo=xxx)
-        when /\A-(.+)\z/m  then token, ctx = $1, :short                           # short or clump (-a, -abc)
-        when rx_value      then ctx = :value                                      # value
-        else raise Unreachable
+        in "--"          then ctx = :end; res << Sep                      # end of options
+        in /\A--(.+)\z/m then token, ctx = $1, :long                      # long (--foo, --foo xxx), long with attached value (--foo=xxx)
+        in /\A-(.+)\z/m  then token, ctx = $1, :short                     # short or clump (-a, -abc)
+        in ^rx_value     then ctx = :value                                # value
         end
 
-      when :long
+      in :long
         name, value = token =~ /\A(.*?)=/m ? [$1, $'] : [token, nil]
         opt = optlist[name] or raise OptionError, "Unknown option: --#{name}"
-        case
-        when  opt.arg? &&  value then ctx = :top; res << Opt[opt, name, value]    # --foo=XXX
-        when !opt.arg? && !value then ctx = :top; res << Opt[opt, name]           # --foo
-        when  opt.arg? && !value then ctx = :arg                                  # --foo XXX
-        when !opt.arg? &&  value then raise OptionError, "Option --#{name} takes no argument"
-        else raise Unreachable
+        case [opt.arg?, value]
+        in true,  String then ctx = :top; res << Opt[opt, name, value]    # --foo=XXX
+        in false, nil    then ctx = :top; res << Opt[opt, name]           # --foo
+        in true,  nil    then ctx = :arg                                  # --foo XXX
+        in false, String then raise OptionError, "Option --#{name} takes no argument"
         end
 
-      when :short
-        name, token = token[0], token[1..].then{ it != "" ? it : nil }            # -abc -> a, bc
+      in :short
+        name, token = token[0], token[1..].then{ it != "" ? it : nil }    # -abc -> a, bc
         opt = optlist[name] or raise OptionError, "Unknown option: -#{name}"
-        case
-        when  opt.arg? &&  token then ctx = :top; res << Opt[opt, name, token]    # -aXXX
-        when !opt.arg? && !token then ctx = :top; res << Opt[opt, name]           # end of -abc
-        when  opt.arg? && !token then ctx = :arg                                  # -a XXX
-        when !opt.arg? &&  token then res << Opt[opt, name]                       # -abc -> took -a, will parse -bc
-        else raise Unreachable
+        case [opt.arg?, token]
+        in true,  String then ctx = :top; res << Opt[opt, name, token]    # -aXXX
+        in false, nil    then ctx = :top; res << Opt[opt, name]           # end of -abc
+        in true,  nil    then ctx = :arg                                  # -a XXX
+        in false, String then res << Opt[opt, name]                       # -abc -> took -a, will parse -bc
         end
 
-      when :arg
+      in :arg
         token = tokens[0]&.=~(rx_value) ? tokens.shift : nil
-        case
-        when opt.arg! && !token then raise OptionError, "Expected argument for option -#{?- if name[1]}#{name}" # --req missing value
-        when opt.arg! &&  token then ctx = :top; res << Opt[opt, name, token]     # --req val
-        when opt.arg? &&  token then ctx = :top; res << Opt[opt, name, token]     # --opt val
-        when opt.arg? && !token then ctx = :top; res << Opt[opt, name]            # --opt followed by --foo, --opt as last token
-        else raise Unreachable
+        case [opt.arg, token]
+        in :may,  String then ctx = :top; res << Opt[opt, name, token]   # --opt val
+        in :must, String then ctx = :top; res << Opt[opt, name, token]   # --req val
+        in :may,  nil    then ctx = :top; res << Opt[opt, name]          # --opt followed by --foo, --opt as last token
+        in :must, nil    then raise OptionError, "Expected argument for option -#{?- if name[1]}#{name}" # --req missing value
         end
 
-      else raise Unreachable
       end
     end
   end
