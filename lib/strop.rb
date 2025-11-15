@@ -196,26 +196,21 @@ module Strop
 
   # Extract option declarations from formatted help text
   def self.parse_help(help, pad: /(?:  ){1,2}/) #=> Optlist[...]
-    help.scan(/^#{pad}(#{RX_OPTS})(.*)/).map do |line, rest| # get all opts lines
+    decls = help.scan(/^#{pad}(#{RX_OPTS})(.*)/).map do |line, rest| # get all optdecl lines
       # Ambiguous: --opt Desc with only one space before will interpret "Desc" as arg.
-      if rest =~ /^ \S/ && line =~ / (#{RX_SARG})$/ # desc preceeded by sringle space && last arg is " "+word. Capture arg name
-        $stderr.puts "#{$1.inspect} was interpreted as argument, In #{(line+rest).inspect}. Use at least two spaces before description to avoid this warning."
-      end
-      line.scan(RX_OPT).map do |opt|    # take options from each line
-        opt.split(/(?=\[=)|=| +/, 2)    # separate name from arg
-      end.map do |name, arg|            # remove opt markers -/--, transform arg str into requirement
-        [name.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must]
-      end.transpose           # [[name,arg], ...] -> [names, args]
-      .then do |names, args|  # handle -f,--foo=x style (without arg on short opt); expand --[no]flag into --flag and --noflag (also --[no-])
-        args = args.uniq.tap{ it.delete :shant if it.size > 1 }                                  # delete excess :shant (from -f in -f,--foo=x)
-        raise "Option #{names} has conflicting arg requirements: #{args}" if args.size > 1       # raise if still conflict, like -f X, --ff [X]
-        [(names.flat_map{|f| f.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : f }).uniq, args[0]]  # [flags and noflags, resolved single arg]
-      end
-    end.uniq.tap do |list| # [[[name, name, ...], arg, more opts ...]
-      dupes = list.flat_map(&:first).tally.reject{|k,v|v==1}
-      raise "Options #{dupes.keys.inspect} seen more than once in distinct definitions" if dupes.any?
-    end.map{ |names, arg| Optdecl[*names, arg:] }.then{ Optlist[*it] }
+      ambiguous = rest =~ /^ \S/ && line =~ / (#{RX_SARG})$/ # desc preceeded by sringle space && last arg is " "+word. Capture arg name for error below
+      ambiguous and $stderr.puts "#{$1.inspect} was interpreted as argument, In #{(line+rest).inspect}. Use at least two spaces before description to avoid this warning."
+      pairs = line.scan(RX_OPT).map { it.split(/(?=\[=)|=| +/, 2) }                        # take options from each line, separate name from arg
+      pairs.map! { |name, arg| [name.sub(/^--?/, ''), arg.nil? ? :shant : arg[0] == "[" ? :may : :must] } # remove opt markers -/--, transform arg str into requirement
+      names, args = pairs.transpose                                                        # [[name, arg], ...] -> [names, args]
+      arg, *rest = args.uniq.tap{ it.delete :shant if it.size > 1 }                        # delete excess :shant (from -f in -f,--foo=x, without arg on short opt)
+      raise "Option #{names} has conflicting arg requirements: #{args}" if rest.any?       # raise if still conflict, like -f X, --ff [X]
+      names = (names.flat_map{ it.start_with?(RX_NO) ? [$', $&[1...-1] + $'] : it }).uniq  # expand --[no]flag into --flag and --noflag (also --[no-])
+      [names, arg]                                                                         # [names and noflags, resolved single arg]
+    end.uniq                                                                               # allow identical opts
+    dupes = decls.flat_map(&:first).tally.reject{|k,v|v==1}                                # detect repeated names with diff specs
+    raise "Options #{dupes.keys.inspect} seen more than once in distinct definitions" if dupes.any?
+    decls.map{ |names, arg| Optdecl[*names, arg:] }.then{ Optlist[*it] }                   # Return an Optlist from decls
   end
-
 
 end
