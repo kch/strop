@@ -137,7 +137,7 @@ module Strop
         end
 
       in :long
-        name, value = token =~ /\A(.*?)=/m ? [$1, $'] : [token, nil]
+        name, value = *token.split(?=, 2)
         opt = optlist[name] or raise OptionError, "Unknown option: --#{name}"
         case [opt.arg?, value]
         in true,  String then ctx = :top; res << Opt[opt, name, value]    # --foo=XXX
@@ -147,7 +147,7 @@ module Strop
         end
 
       in :short
-        name, token = token[0], token[1..].then{ it != "" ? it : nil }    # -abc -> a, bc
+        name, token = token[0], token[1..].then{ it if it != "" }         # -abc -> a, bc
         opt = optlist[name] or raise OptionError, "Unknown option: -#{name}"
         case [opt.arg?, token]
         in true,  String then ctx = :top; res << Opt[opt, name, token]    # -aXXX
@@ -157,7 +157,7 @@ module Strop
         end
 
       in :arg
-        token = tokens[0]&.=~(rx_value) ? tokens.shift : nil
+        token = tokens[0]&.match(rx_value) && tokens.shift
         case [opt.arg, token]
         in :may,  String then ctx = :top; res << Opt[opt, name, token]   # --opt val
         in :must, String then ctx = :top; res << Opt[opt, name, token]   # --req val
