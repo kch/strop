@@ -74,23 +74,6 @@ module Strop
   # Const for parsed `--` end of option markers. Seen as member of Result.
   Sep = :end_marker
 
-  # for debugging only, TODO remove later probably
-  class Arg
-    def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
-  end
-  class Opt
-    def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
-  end
-
-  # Convenience. Include if you don't wanna Strop:: everywhere.
-  module Exports
-    Optlist = Strop::Optlist
-    Optdecl = Strop::Optdecl
-    Opt     = Strop::Opt
-    Arg     = Strop::Arg
-    Sep     = Strop::Sep
-  end
-
   # Parse result containing options, arguments, and separators; Returned by `parse`
   # Result[opt1, arg1, Sep] #=> [Opt(...), Arg(...), Sep]
   class Result < Array # of Opt, Arg, Sep
@@ -106,6 +89,23 @@ module Strop
   end
 
   class OptionError < ArgumentError; end # Raised during parse, with error msgs
+
+  # Convenience. Include if you don't wanna Strop:: everywhere.
+  module Exports
+    Optlist = Strop::Optlist
+    Optdecl = Strop::Optdecl
+    Opt     = Strop::Opt
+    Arg     = Strop::Arg
+    Sep     = Strop::Sep
+  end
+
+  # for debugging only, TODO remove later probably
+  class Arg
+    def encode_with(coder) = (coder.scalar = self.value; coder.tag = nil)
+  end
+  class Opt
+    def encode_with(coder) = (coder.map = { self.name => self.value }; coder.tag = nil)
+  end
 
   # Parse command line arguments array against option declarations. Defaults to parsing ARGV
   # Accepts help text, file object for help file, or Optlist
