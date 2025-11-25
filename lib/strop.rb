@@ -58,6 +58,7 @@ module Strop
   Arg = Data.define :value, :arg do
     def initialize(value:) = super(value:, arg: value)
     alias to_s value
+    alias to_str value
   end
 
   # Parsed option with declaration, invocation name, value, and negation state. Used internally. Seen as member of Result.
