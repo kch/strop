@@ -74,7 +74,7 @@ module Strop
   end
 
   # Const for parsed `--` end of option markers. Seen as member of Result.
-  Sep = :end_marker
+  Sep = :sep
 
   # Parse result containing options, arguments, and separators; Returned by `parse`
   # Result[opt1, arg1, Sep] #=> [Opt(...), Arg(...), Sep]
