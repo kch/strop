@@ -84,7 +84,8 @@ module Strop
     def opts = Result.new(select { Opt === it })
     def [](k, ...)
       case k
-      when String, Symbol then find{ Opt === it && it.decl.names.member?(k.to_s) }
+      in [String | Symbol => name] then opts.select{ it.decl.names.include? name.to_s }
+      in String | Symbol           then find{ Opt === it && it.decl.names.member?(k.to_s) }
       else super(k, ...)
       end
     end
