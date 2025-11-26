@@ -2,6 +2,13 @@
 
 # require "bundler/gem_tasks"
 
+desc "Run tests"
+task :test do
+  sh "ruby -Ilib:test test/test_*.rb"
+end
+
+task default: :test
+
 version_file = "lib/strop/version.rb"
 load version_file
 
