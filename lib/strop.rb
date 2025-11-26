@@ -30,7 +30,18 @@ module Strop
   # Optlist[decl1, decl2] #=> [Optdecl(...), Optdecl(...)]
   class Optlist < Array # a list of Optdecls
     def self.from_help(doc) = Strop.parse_help(doc) #=> Optlist[decl, ...] # Build from help text
-    def [](k, ...) = [String, Symbol].any?{ it === k } ? self.find{ it.names.member? k.to_s } : super(k, ...)
+
+    def [](k, ...)
+      case k
+      in String | Symbol
+        s = k.to_s
+        found = find{ it.names.member? s } and return found
+        found, *others = select{ it.names.any?{ it.start_with? s }} if s[1]
+        found if found && others.empty?
+      else super(k, ...)
+      end
+    end
+
     def to_s(as=:plain)
       case as
       when :plain then join("\n")
