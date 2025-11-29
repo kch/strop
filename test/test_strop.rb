@@ -68,6 +68,7 @@ class TestOpt < Minitest::Test
     assert_equal "flag", optlist[:flag].label    # lookup by long name (symbol)
     assert_equal "verbose", optlist["v"].label   # lookup by non-label name
     assert_equal "verbose", optlist[:verbose].label # lookup by label name
+    assert_equal "verbose", optlist["ver"].label # partial match
     assert_nil optlist["nonexistent"]            # returns nil for unknown opts
   end
 
@@ -144,7 +145,7 @@ class TestOpt < Minitest::Test
   end
 
   def test_long_options
-    optlist = Optlist[Optdecl[:verbose?], Optdecl[:output!]]
+    optlist = Optlist[Optdecl[:verbose?], Optdecl[:version], Optdecl[:amend], Optdecl[:output!]]
 
     res = Strop.parse(optlist, ["--verbose"])       # optional arg, none given
     assert_equal 1, res.opts.size
@@ -158,6 +159,22 @@ class TestOpt < Minitest::Test
     res = Strop.parse(optlist, ["--output", "file.txt"])  # separate value
     assert_equal 1, res.opts.size
     assert_equal "file.txt", res.opts[0].value
+
+    # partial matching
+    res = Strop.parse(optlist, ["--am"])  # partial match works
+    assert_equal 1, res.opts.size
+    assert_equal "amend", res.opts[0].label
+
+    # single char doesn't partial match
+    err = assert_raises(Strop::OptionError) { Strop.parse(optlist, ["--a"]) }
+    assert_match(/Unknown option: --a/, err.message)
+
+    err = assert_raises(Strop::OptionError) { Strop.parse(optlist, ["-a"]) }
+    assert_match(/Unknown option: -a/, err.message)
+
+    # ambiguous partial matches
+    err = assert_raises(Strop::OptionError) { Strop.parse(optlist, ["--ver"]) }
+    assert_match(/Unknown option: --ver/, err.message)
   end
 
   def test_empty_value_handling
