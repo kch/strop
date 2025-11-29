@@ -190,6 +190,12 @@ class TestOpt < Minitest::Test
     assert_equal 2, res.args.size
     assert_equal "arg1", res.args[0].value
     assert_equal "arg2", res.args[1].value
+
+    # dash should parse as positional arg
+    res = Strop.parse(optlist, ["-"])
+    assert_equal 0, res.opts.size
+    assert_equal 1, res.args.size
+    assert_equal "-", res.args[0].value
   end
 
   def test_mixed_args_and_options
@@ -202,6 +208,13 @@ class TestOpt < Minitest::Test
     assert opts_by_label["f"]
     assert_equal "value", opts_by_label["v"][0].value
     assert_equal ["arg1", "arg2", "arg3"], res.args.map(&:value)
+
+    # dash with options
+    res = Strop.parse(optlist, ["-", "-f"])
+    assert_equal 1, res.opts.size
+    assert_equal 1, res.args.size
+    assert_equal "-", res.args[0].value
+    assert res.opts[0].label == "f"
   end
 
   def test_error_handling

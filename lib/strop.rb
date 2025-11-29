@@ -125,7 +125,7 @@ module Strop
     res = Result.new
     ctx = :top
     name, token, opt = nil
-    rx_value = /\A[^-]|\A\z/ # not an opt
+    rx_value = /\A[^-]|\A-?\z/ # not an opt
     loop do
       case ctx
       in :end then return res.concat tokens.map{ Arg[it] } # opt parsing ended, rest is positional args
