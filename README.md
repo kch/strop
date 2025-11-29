@@ -58,10 +58,11 @@ puts Strop.parse_help(help_text).to_s(:case)
 ## Result members (Array of Opt, Arg, Sep)
 
 ```ruby
-res.opts     # all Opt objects
-res.args     # all Arg objects
-res.rest     # args after -- separator
-res["flag"]  # find opt by name
+res.opts      # all Opt objects
+res.args      # all Arg objects
+res.rest      # args after -- separator
+res["flag"]   # find opt by name
+res[["flag"]] # find all opts matching name
 
 opt = res.opts.first
 arg = res.args.first
@@ -73,6 +74,7 @@ opt.no?      # true if --no-foo variant used
 opt.yes?     # opposite of `no?`
 arg.value    # positional argument
 arg.arg      # same as .value, useful for pattern matching
+arg.to_s     # implicit string conversion (same as .value)
 Sep          # -- end of options marker; Const, not instantiated
 ```
 
@@ -118,6 +120,7 @@ cmd -fVAL, --foo=VAL                  # attached values
 cmd -f VAL, --foo VAL                 # separate values
 cmd --foo val -- --bar                # --bar becomes positional after --
 cmd --intermixed args and --options   # flexible ordering
+cmd --ver                             # partial matching (--ver matches --verbose if unique)
 ```
 
 ## Manual option declaration building
@@ -141,6 +144,7 @@ Optdecl["foo_bar"]                    # --foo_bar: but not in strings.
 ```ruby
 optlist = Optlist[optdecl1, optdecl2] # combine decls into optlist
 optlist["f"]                          # lookup by name
+optlist["fl"]                         # partial match (finds "flag" if unique)
 ```
 
 ## Argument requirements
