@@ -296,7 +296,7 @@ class TestOpt < Minitest::Test
     assert_match(/takes no argument/, err.message)
 
     err = assert_raises(Strop::OptionError) { Strop.parse(optlist, ["--req"]) }        # required arg missing
-    assert_match(/Expected argument for option --req/, err.message)
+    assert_match(/Option --req expects an argument/, err.message)
 
     err = assert_raises(Strop::OptionError) { Strop.parse(optlist, ["-req"]) }         # -req parses as -r, which doesn't exist
     assert_match(/Unknown option: -r/, err.message)

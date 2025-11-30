@@ -178,7 +178,7 @@ module Strop
         in :may,  String then ctx = :top; res << Opt[opt, name, token]   # --opt val
         in :must, String then ctx = :top; res << Opt[opt, name, token]   # --req val
         in :may,  nil    then ctx = :top; res << Opt[opt, name]          # --opt followed by --foo, --opt as last token
-        in :must, nil    then raise OptionError, "Expected argument for option -#{?- if name[1]}#{name}" # --req missing value
+        in :must, nil    then raise OptionError, "Option #{Strop.prefix name} expects an argument" # --req missing value
         end
 
       end
