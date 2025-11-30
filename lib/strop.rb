@@ -190,7 +190,7 @@ module Strop
     parse(...)
   rescue OptionError => e
     $stderr.puts e.message
-    exit 1
+    exit 64 # cf. man 3 sysexits (bsd)
   end
 
 
