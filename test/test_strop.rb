@@ -315,6 +315,37 @@ class TestOpt < Minitest::Test
     quiet_opt = res[:q]
     assert quiet_opt
     assert_equal "quiet", quiet_opt.label
+
+    # Test array lookup for all matching options
+    all_f_opts = res[["f"]]                # lookup all by short name
+    assert_equal 1, all_f_opts.size
+    assert_equal f_opt, all_f_opts[0]
+
+    all_flag_opts = res[["flag"]]          # lookup all by label name
+    assert_equal 1, all_flag_opts.size
+    assert_equal f_opt, all_flag_opts[0]
+
+    all_v_opts = res[["v"]]                # lookup all by short name
+    assert_equal 1, all_v_opts.size
+    assert_equal v_opt, all_v_opts[0]
+  end
+
+  def test_result_array_lookup_multiple
+    optlist = Optlist[Optdecl[:v?, :verbose]]
+    res = Strop.parse(optlist, ["-v", "low", "-v", "high", "--verbose", "max"])
+
+    # Single lookup returns first
+    first_v = res["v"]
+    assert_equal "low", first_v.value
+
+    # Array lookup returns all
+    all_v = res[["v"]]
+    assert_equal 3, all_v.size
+    assert_equal ["low", "high", "max"], all_v.map(&:value)
+
+    all_verbose = res[["verbose"]]
+    assert_equal 3, all_verbose.size
+    assert_equal all_v, all_verbose
   end
 
   def test_parse_help_basic
