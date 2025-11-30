@@ -61,7 +61,7 @@ class TestOpt < Minitest::Test
   end
 
   def test_optlist_lookup
-    optlist = Optlist[Optdecl[:f, :flag], Optdecl[:v, :verbose]]
+    optlist = Optlist[Optdecl[:f, :flag], Optdecl[:v, :verbose], Optdecl[:"dry-run"], Optdecl[:user_name]]
     assert_equal "flag", optlist["f"].label      # lookup by short name (string)
     assert_equal "flag", optlist["flag"].label   # lookup by long name (string)
     assert_equal "flag", optlist[:f].label       # lookup by short name (symbol)
@@ -70,6 +70,19 @@ class TestOpt < Minitest::Test
     assert_equal "verbose", optlist[:verbose].label # lookup by label name
     assert_equal "verbose", optlist["ver"].label # partial match
     assert_nil optlist["nonexistent"]            # returns nil for unknown opts
+
+    # Test dash option lookups
+    dry_decl = optlist[:"dry-run"]
+    assert dry_decl
+    assert_equal "dry-run", dry_decl.label
+
+    # Test snake_case symbol conversion
+    user_decl = optlist[:user_name]              # snake_case lookup
+    assert user_decl
+    assert_equal "user-name", user_decl.label
+
+    user_decl2 = optlist[:"user-name"]           # dash lookup
+    assert_equal user_decl, user_decl2
   end
 
   def test_short_options
@@ -328,6 +341,14 @@ class TestOpt < Minitest::Test
     all_v_opts = res[["v"]]                # lookup all by short name
     assert_equal 1, all_v_opts.size
     assert_equal v_opt, all_v_opts[0]
+
+    # Test symbol lookups
+    v_opt3 = res[:"verbose"]               # symbol lookup
+    assert_equal v_opt, v_opt3
+
+    all_v_opts2 = res[[:verbose]]          # array symbol lookup
+    assert_equal 1, all_v_opts2.size
+    assert_equal v_opt, all_v_opts2[0]
   end
 
   def test_result_array_lookup_multiple
@@ -346,6 +367,45 @@ class TestOpt < Minitest::Test
     all_verbose = res[["verbose"]]
     assert_equal 3, all_verbose.size
     assert_equal all_v, all_verbose
+
+    # Test symbol lookups
+    first_v_sym = res[:v]
+    assert_equal first_v, first_v_sym
+
+    all_v_sym = res[[:v]]
+    assert_equal all_v, all_v_sym
+
+    all_verbose_sym = res[[:verbose]]
+    assert_equal all_verbose, all_verbose_sym
+  end
+
+  def test_result_dash_underscore_symbols
+    optlist = Optlist[Optdecl[:"dry-run"], Optdecl[:user_name]]
+    res = Strop.parse(optlist, ["--dry-run", "--user-name", "test"])
+
+    # Test dash options with quoted symbols
+    dry_run_opt = res[:"dry-run"]
+    assert dry_run_opt
+    assert_equal "dry-run", dry_run_opt.label
+
+    all_dry_run = res[[:"dry-run"]]
+    assert_equal 1, all_dry_run.size
+    assert_equal dry_run_opt, all_dry_run[0]
+
+    # Test underscore symbols converting to dash
+    user_opt = res[:user_name]            # snake_case symbol
+    assert user_opt
+    assert_equal "user-name", user_opt.label
+
+    user_opt2 = res[:"user-name"]         # dash symbol
+    assert_equal user_opt, user_opt2
+
+    all_user = res[[:user_name]]          # array with snake_case
+    assert_equal 1, all_user.size
+    assert_equal user_opt, all_user[0]
+
+    all_user2 = res[[:"user-name"]]       # array with dash
+    assert_equal all_user, all_user2
   end
 
   def test_parse_help_basic

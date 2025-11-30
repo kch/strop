@@ -6,17 +6,18 @@ require_relative "strop/version"
 # Command-line option parser that builds options from help text
 module Strop
   def self.prefix(name) = (name[1] ? "--" : "-") + name # helper for printing back option names with the right prefix
+  def self.name_from_symbol(name) = Symbol === name ? name.to_s.gsub(?_, ?-) : name
 
   # Option declaration: names, argument requirement, and canonical label (auto-determined)
   # Optdecl[:f, :foo, arg: :may] #=> Optdecl(names: ["f", "foo"], arg: :may, label: "foo")
   Optdecl = Data.define(:names, :arg, :label) do
     def self.[](*names, arg: nil) = new(names:, arg:) # Custom builder: Optdecl[names, ..., arg: ...]
     def initialize(names:, arg: nil)
-      names = [*names].map{ Symbol === it ? it.to_s.gsub(?_, ?-) : it } # :foo_bar to "foo-bar" for symbols
-      names[0] = names[0].sub(/[!?]$/, "") unless arg                   # opt? / opt! to opt, and... (unless arg given)
-      arg ||= { ?? => :may, ?! => :must }[$&] || :shant                 # use ?/! to determine arg (unless arg given)
-      label = names.find{ it.size > 1 } || names.first                  # the canonical name used to search for it
-      %i[must may shant].member? arg or raise "invalid arg"             # validate arg
+      names = [*names].map{ Strop.name_from_symbol it }       # :foo_bar to "foo-bar" for symbols
+      names[0] = names[0].sub(/[!?]$/, "") unless arg         # opt? / opt! to opt, and... (unless arg given)
+      arg ||= { ?? => :may, ?! => :must }[$&] || :shant       # use ?/! to determine arg (unless arg given)
+      label = names.find{ it.size > 1 } || names.first        # the canonical name used to search for it
+      %i[must may shant].member? arg or raise "invalid arg"   # validate arg
       super names:, arg:, label:
     end
 
@@ -34,7 +35,7 @@ module Strop
     def [](k, ...)
       case k
       in String | Symbol
-        s = k.to_s
+        s = Strop.name_from_symbol k
         found = find{ it.names.member? s } and return found
         found, *others = select{ it.names.any?{ it.start_with? s }} if s[1]
         found if found && others.empty?
@@ -95,8 +96,8 @@ module Strop
     def opts = Result.new(select { Opt === it })
     def [](k, ...)
       case k
-      in [String | Symbol => name] then opts.select{ it.decl.names.include? name.to_s }
-      in String | Symbol           then find{ Opt === it && it.decl.names.member?(k.to_s) }
+      in [String | Symbol => name] then opts.select{ it.decl.names.include? Strop.name_from_symbol name }
+      in String | Symbol           then find{ Opt === it && it.decl.names.member?(Strop.name_from_symbol k) }
       else super(k, ...)
       end
     end
