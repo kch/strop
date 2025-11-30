@@ -14,7 +14,7 @@ module Strop
     def self.[](*names, arg: nil) = new(names:, arg:) # Custom builder: Optdecl[names, ..., arg: ...]
     def initialize(names:, arg: nil)
       names = [*names].map{ Strop.name_from_symbol it }       # :foo_bar to "foo-bar" for symbols
-      names[0] = names[0].sub(/[!?]$/, "") unless arg         # opt? / opt! to opt, and... (unless arg given)
+      names[0] = names[0].sub(/.\K[!?]$/, "") unless arg      # opt? / opt! to opt, and... (unless arg given)
       arg ||= { ?? => :may, ?! => :must }[$&] || :shant       # use ?/! to determine arg (unless arg given)
       label = names.find{ it.size > 1 } || names.first        # the canonical name used to search for it
       %i[must may shant].member? arg or raise "invalid arg"   # validate arg

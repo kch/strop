@@ -134,7 +134,7 @@ Optdecl[:f, :foo]                     # multiple names: -f or --foo
 Optdecl[:f?, :foo]                    # multiple + arg modifier: use ?/! only on first
 Optdecl[:f?, :foo?]                   # so this will result in -f, --foo?
 Optdecl[:f, :foo, arg: :may]          # explicit arg form: --foo [ARG]
-Optdecl[:?, arg: :shant]              # explicit form allows using ?/! in option name: -?
+Optdecl[:f?, arg: :shant]             # explicit form allows using ?/! in option name: -f?
 Optdecl[:foo_bar]                     # --foo-bar: Underscores in symbol names get replaced with `-`
 Optdecl["foo_bar"]                    # --foo_bar: but not in strings.
 ```

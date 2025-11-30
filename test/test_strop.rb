@@ -35,6 +35,28 @@ class TestOpt < Minitest::Test
 
     opt = Optdecl["foo_bar"]              # strings keep underscores
     assert_equal ["foo_bar"], opt.names
+
+    # Single-character ? and ! don't trigger arg derivation
+    opt = Optdecl[:"?"]                   # literal ? option
+    assert_equal ["?"], opt.names
+    assert_equal :shant, opt.arg          # no arg derivation for single char
+    assert_equal "?", opt.label
+
+    opt = Optdecl[:"!"]                   # literal ! option
+    assert_equal ["!"], opt.names
+    assert_equal :shant, opt.arg          # no arg derivation for single char
+    assert_equal "!", opt.label
+
+    # String versions of single-character ? and !
+    opt = Optdecl["?"]                    # literal ? option (string)
+    assert_equal ["?"], opt.names
+    assert_equal :shant, opt.arg          # no arg derivation for single char
+    assert_equal "?", opt.label
+
+    opt = Optdecl["!"]                    # literal ! option (string)
+    assert_equal ["!"], opt.names
+    assert_equal :shant, opt.arg          # no arg derivation for single char
+    assert_equal "!", opt.label
   end
 
   def test_optdecl_predicates
@@ -50,6 +72,20 @@ class TestOpt < Minitest::Test
     must_arg = Optdecl[:f!]
     assert must_arg.arg?                  # accepts arg
     assert must_arg.arg!                  # and requires it
+
+    # Test string versions
+    flag_str = Optdecl["f"]
+    refute flag_str.arg?                  # doesn't accept arg
+    refute flag_str.arg!                  # doesn't require arg
+    refute flag_str.no?                   # not a --[no-]flag pair
+
+    may_arg_str = Optdecl["f?"]
+    assert may_arg_str.arg?               # accepts arg
+    refute may_arg_str.arg!               # but doesn't require it
+
+    must_arg_str = Optdecl["f!"]
+    assert must_arg_str.arg?              # accepts arg
+    assert must_arg_str.arg!              # and requires it
   end
 
   def test_optdecl_to_s
